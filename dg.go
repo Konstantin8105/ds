@@ -89,18 +89,18 @@ func New(name string, ds [2]Window) (err error) {
 		mutex.Lock()
 		defer mutex.Unlock()
 		//action
-		x, _ := window.GetCursorPos()
+		x, y := window.GetCursorPos()
 		// split by windows
 		if int(x) < xSplit {
 			if f := ds[0].SetMouseButtonCallback; f != nil {
 				focusIndex = 0
-				f(button, action, mods, x)
+				f(button, action, mods, x, y)
 			}
 			return
 		}
 		if f := ds[1].SetMouseButtonCallback; f != nil {
 			focusIndex = 1
-			f(button, action, mods, x-float64(xSplit))
+			f(button, action, mods, x-float64(xSplit), y)
 		}
 	})
 
@@ -123,7 +123,7 @@ func New(name string, ds [2]Window) (err error) {
 
 		// prepare screen 1
 		gl.Viewport(int32(xSplit), 0, int32(w-xSplit), int32(h))
- 		gl.MatrixMode(gl.MODELVIEW)
+		gl.MatrixMode(gl.MODELVIEW)
 		gl.LoadIdentity()
 		if f := ds[1].Draw; f != nil {
 			f()
@@ -138,7 +138,7 @@ func New(name string, ds [2]Window) (err error) {
 }
 
 type Window struct {
-	SetMouseButtonCallback func(button glfw.MouseButton, action glfw.Action, mods glfw.ModifierKey, xLocal float64)
+	SetMouseButtonCallback func(button glfw.MouseButton, action glfw.Action, mods glfw.ModifierKey, x, y float64)
 	SetCharCallback        func(r rune)
 	SetScrollCallback      func(xoffset, yoffset float64)
 	Draw                   func()

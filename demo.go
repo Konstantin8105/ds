@@ -3,10 +3,13 @@
 package main
 
 import (
+	"fmt"
+	"os"
 	"time"
 
 	"github.com/Konstantin8105/ds"
 	"github.com/go-gl/gl/v2.1/gl"
+	"github.com/go-gl/glfw/v3.3/glfw"
 )
 
 func main() {
@@ -22,6 +25,9 @@ func main() {
 		}
 		gl.End()
 	}
+	ws[0].SetMouseButtonCallback = func(button glfw.MouseButton, action glfw.Action, mods glfw.ModifierKey, x, y float64) {
+		fmt.Fprintf(os.Stdout, "Click on window 0:[%v,%v]\n", x, y)
+	}
 	ws[1].Draw = func() {
 		gl.Begin(gl.QUADS)
 		gl.Color3d(0.1, 0.3, 0.9)
@@ -32,6 +38,9 @@ func main() {
 			gl.Vertex2d(+0.99, -0.99)
 		}
 		gl.End()
+	}
+	ws[1].SetMouseButtonCallback = func(button glfw.MouseButton, action glfw.Action, mods glfw.ModifierKey, x, y float64) {
+		fmt.Fprintf(os.Stdout, "Click on window 1:[%v,%v]\n", x, y)
 	}
 
 	go func() {
