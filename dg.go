@@ -77,6 +77,32 @@ func New(name string, ds [2]Window, actions chan func()) (err error) {
 		}
 	})
 
+	// TODO:
+
+	// func (w *Window) SetKeyCallback(cbfun KeyCallback) (previous KeyCallback)
+	//     SetKeyCallback sets the key callback which is called when a key is pressed,
+	//     repeated or released.
+	//
+	//     The key functions deal with physical keys, with layout independent key
+	//     tokens named after their values in the standard US keyboard layout. If you
+	//     want to input text, use the SetCharCallback instead.
+	//
+	//     When a window loses focus, it will generate synthetic key release events
+	//     for all pressed keys. You can tell these events from user-generated events
+	//     by the fact that the synthetic ones are generated after the window has lost
+	//     focus, i.e. Focused will be false and the focus callback will have already
+	//     been called.
+
+	// func (w *Window) SetCursorEnterCallback(cbfun CursorEnterCallback) (previous CursorEnterCallback)
+	//     SetCursorEnterCallback the cursor boundary crossing callback which is called
+	//     when the cursor enters or leaves the client area of the window.
+
+	// func SetClipboardString(str string)
+	//     SetClipboardString sets the system clipboard to the specified UTF-8 encoded
+	//     string.
+	//
+	//     This function may only be called from the main thread.
+
 	window.SetMouseButtonCallback(func(
 		w *glfw.Window,
 		button glfw.MouseButton,
@@ -143,9 +169,9 @@ func New(name string, ds [2]Window, actions chan func()) (err error) {
 	return
 }
 
-type Window struct {
-	SetMouseButtonCallback func(button glfw.MouseButton, action glfw.Action, mods glfw.ModifierKey, x, y float64)
-	SetCharCallback        func(r rune)
-	SetScrollCallback      func(xoffset, yoffset float64)
-	Draw                   func()
+type Window interface {
+	SetMouseButtonCallback(button glfw.MouseButton, action glfw.Action, mods glfw.ModifierKey, x, y float64)
+	SetCharCallback(r rune)
+	SetScrollCallback(xoffset, yoffset float64)
+	Draw()
 }
