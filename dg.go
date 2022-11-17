@@ -3,7 +3,6 @@ package ds
 import (
 	"fmt"
 	"runtime"
-	"sync"
 
 	"github.com/go-gl/gl/v2.1/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
@@ -15,10 +14,11 @@ func init() {
 	runtime.LockOSThread()
 }
 
-func New(name string, ds [2]Window) (err error) {
-	//mutex
-	var mutex sync.Mutex
-
+// New return windows.
+// Minimal `actions = make(chan func(), 1000)`.
+//
+func New(name string, ds [2]Window, actions chan func()) (err error) {
+	//initialization
 	if err = glfw.Init(); err != nil {
 		err = fmt.Errorf("failed to initialize glfw: %v", err)
 		return
@@ -50,32 +50,30 @@ func New(name string, ds [2]Window) (err error) {
 	var focusIndex uint = 0
 
 	window.SetCharCallback(func(w *glfw.Window, r rune) {
-		//mutex
-		mutex.Lock()
-		defer mutex.Unlock()
 		//action
 		if f := ds[focusIndex].SetCharCallback; f != nil {
-			f(r)
+			actions <- func() { f(r) }
 		}
 	})
 
 	window.SetScrollCallback(func(w *glfw.Window, xoffset, yoffset float64) {
-		//mutex
-		mutex.Lock()
-		defer mutex.Unlock()
 		//action
 		x, _ := window.GetCursorPos()
 		// split by windows
 		if int(x) < xSplit {
 			if f := ds[0].SetScrollCallback; f != nil {
-				focusIndex = 0
-				f(xoffset, yoffset)
+				actions <- func() {
+					f(xoffset, yoffset)
+					focusIndex = 0
+				}
 			}
 			return
 		}
 		if f := ds[1].SetScrollCallback; f != nil {
-			focusIndex = 1
-			f(xoffset, yoffset)
+			actions <- func() {
+				f(xoffset, yoffset)
+				focusIndex = 1
+			}
 		}
 	})
 
@@ -85,22 +83,23 @@ func New(name string, ds [2]Window) (err error) {
 		action glfw.Action,
 		mods glfw.ModifierKey,
 	) {
-		//mutex
-		mutex.Lock()
-		defer mutex.Unlock()
 		//action
 		x, y := window.GetCursorPos()
 		// split by windows
 		if int(x) < xSplit {
 			if f := ds[0].SetMouseButtonCallback; f != nil {
-				focusIndex = 0
-				f(button, action, mods, x, y)
+				actions <- func() {
+					f(button, action, mods, x, y)
+					focusIndex = 0
+				}
 			}
 			return
 		}
 		if f := ds[1].SetMouseButtonCallback; f != nil {
-			focusIndex = 1
-			f(button, action, mods, x-float64(xSplit), y)
+			actions <- func() {
+				f(button, action, mods, x-float64(xSplit), y)
+				focusIndex = 1
+			}
 		}
 	})
 
@@ -127,6 +126,13 @@ func New(name string, ds [2]Window) (err error) {
 		gl.LoadIdentity()
 		if f := ds[1].Draw; f != nil {
 			f()
+		}
+
+		// actions func run
+		select {
+		case f := <-actions:
+			f()
+		default:
 		}
 
 		// end

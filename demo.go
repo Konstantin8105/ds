@@ -4,6 +4,7 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
 	"time"
 
@@ -13,31 +14,39 @@ import (
 )
 
 func main() {
+	get := func() float64 {
+		return (rand.Float64() * 2) - 1
+	}
+	size := 50
 	var ws [2]ds.Window
 	ws[0].Draw = func() {
-		gl.Begin(gl.QUADS)
-		gl.Color3d(0.8, 0.1, 0.1)
-		{
-			gl.Vertex2d(-0.99, -0.99)
-			gl.Vertex2d(-0.99, +0.99)
-			gl.Vertex2d(+0.99, +0.99)
-			gl.Vertex2d(+0.99, -0.99)
+		for i := 0; i < size; i++ {
+			gl.Begin(gl.QUADS)
+			gl.Color4d(0.8, float64(i)/float64(size), 0.1, 0.5)
+			{
+				gl.Vertex2d(-get(), -get())
+				gl.Vertex2d(-get(), +get())
+				gl.Vertex2d(+get(), +get())
+				gl.Vertex2d(+get(), -get())
+			}
+			gl.End()
 		}
-		gl.End()
 	}
 	ws[0].SetMouseButtonCallback = func(button glfw.MouseButton, action glfw.Action, mods glfw.ModifierKey, x, y float64) {
 		fmt.Fprintf(os.Stdout, "Click on window 0:[%v,%v]\n", x, y)
 	}
 	ws[1].Draw = func() {
-		gl.Begin(gl.QUADS)
-		gl.Color3d(0.1, 0.3, 0.9)
-		{
-			gl.Vertex2d(-0.99, -0.99)
-			gl.Vertex2d(-0.99, +0.99)
-			gl.Vertex2d(+0.99, +0.99)
-			gl.Vertex2d(+0.99, -0.99)
+		for i := 0; i < size; i++ {
+			gl.Begin(gl.QUADS)
+			gl.Color4d(0.1, 0.3, float64(i)/float64(size), 0.5)
+			{
+				gl.Vertex2d(-get(), -get())
+				gl.Vertex2d(-get(), +get())
+				gl.Vertex2d(+get(), +get())
+				gl.Vertex2d(+get(), -get())
+			}
+			gl.End()
 		}
-		gl.End()
 	}
 	ws[1].SetMouseButtonCallback = func(button glfw.MouseButton, action glfw.Action, mods glfw.ModifierKey, x, y float64) {
 		fmt.Fprintf(os.Stdout, "Click on window 1:[%v,%v]\n", x, y)
@@ -50,7 +59,7 @@ func main() {
 		}
 	}()
 
-	err := ds.New("Demo", ws)
+	err := ds.New("Demo", ws, make(chan func(), 1000))
 	if err != nil {
 		panic(err)
 	}
