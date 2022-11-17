@@ -8,17 +8,54 @@ import (
 	"github.com/go-gl/glfw/v3.3/glfw"
 )
 
-var WindowRatio = 0.5
+var windowRatio = 0.5
 
 func init() {
 	runtime.LockOSThread()
 }
 
+type Screen struct {
+	ds           [2]Window
+	w, h, xSplit int
+	actions      *chan func()
+	window       *glfw.Window
+}
+
+func (sc *Screen) ChangeRatio(newRatio float64) {
+	if newRatio < 0 {
+		return
+	}
+	if 1 < newRatio {
+		return
+	}
+	if newRatio < 0.1 {
+		newRatio = 0.1
+	}
+	if 0.9 < newRatio {
+		newRatio = 0.9
+	}
+	(*sc.actions) <- func() {
+		windowRatio = newRatio
+		sc.initRatio()
+	}
+	return
+}
+
+func (sc *Screen) initRatio() {
+	sc.w, sc.h = sc.window.GetSize()
+	sc.xSplit = int(float64(sc.w) * windowRatio)
+}
+
 // New return windows.
 // Minimal `actions = make(chan func(), 1000)`.
 //
-func New(name string, ds [2]Window, actions chan func()) (err error) {
-	//initialization
+func New(name string, ds [2]Window, actions chan func()) (sc *Screen, err error) {
+	// initialization screen
+	sc = new(Screen)
+	sc.actions = &actions
+	sc.ds = ds
+
+	//initialization gl
 	if err = glfw.Init(); err != nil {
 		err = fmt.Errorf("failed to initialize glfw: %v", err)
 		return
@@ -28,12 +65,11 @@ func New(name string, ds [2]Window, actions chan func()) (err error) {
 	glfw.WindowHint(glfw.ContextVersionMajor, 2)
 	glfw.WindowHint(glfw.ContextVersionMinor, 1)
 
-	var window *glfw.Window
-	window, err = glfw.CreateWindow(800, 600, name, nil, nil)
+	sc.window, err = glfw.CreateWindow(800, 600, name, nil, nil)
 	if err != nil {
 		return
 	}
-	window.MakeContextCurrent()
+	sc.window.MakeContextCurrent()
 
 	if err = gl.Init(); err != nil {
 		return
@@ -41,26 +77,23 @@ func New(name string, ds [2]Window, actions chan func()) (err error) {
 
 	glfw.SwapInterval(1) // Enable vsync
 
-	defer func() {
-		// 3D window is close
-		glfw.Terminate()
-	}()
+	sc.initRatio()
 
-	var w, h, xSplit int
+	// var w, h, xSplit int
 	var focusIndex uint = 0
 
-	window.SetCharCallback(func(w *glfw.Window, r rune) {
+	sc.window.SetCharCallback(func(w *glfw.Window, r rune) {
 		//action
 		if f := ds[focusIndex].SetCharCallback; f != nil {
 			actions <- func() { f(r) }
 		}
 	})
 
-	window.SetScrollCallback(func(w *glfw.Window, xoffset, yoffset float64) {
+	sc.window.SetScrollCallback(func(w *glfw.Window, xoffset, yoffset float64) {
 		//action
-		x, _ := window.GetCursorPos()
+		x, _ := sc.window.GetCursorPos()
 		// split by windows
-		if int(x) < xSplit {
+		if int(x) < sc.xSplit {
 			if f := ds[0].SetScrollCallback; f != nil {
 				actions <- func() {
 					f(xoffset, yoffset)
@@ -103,16 +136,16 @@ func New(name string, ds [2]Window, actions chan func()) (err error) {
 	//
 	//     This function may only be called from the main thread.
 
-	window.SetMouseButtonCallback(func(
+	sc.window.SetMouseButtonCallback(func(
 		w *glfw.Window,
 		button glfw.MouseButton,
 		action glfw.Action,
 		mods glfw.ModifierKey,
 	) {
 		//action
-		x, y := window.GetCursorPos()
+		x, y := sc.window.GetCursorPos()
 		// split by windows
-		if int(x) < xSplit {
+		if int(x) < sc.xSplit {
 			if f := ds[0].SetMouseButtonCallback; f != nil {
 				actions <- func() {
 					f(button, action, mods, x, y)
@@ -123,49 +156,53 @@ func New(name string, ds [2]Window, actions chan func()) (err error) {
 		}
 		if f := ds[1].SetMouseButtonCallback; f != nil {
 			actions <- func() {
-				f(button, action, mods, x-float64(xSplit), y)
+				f(button, action, mods, x-float64(sc.xSplit), y)
 				focusIndex = 1
 			}
 		}
 	})
 
-	for !window.ShouldClose() {
-		// windows
-		w, h = window.GetSize()
-		xSplit = int(float64(w) * WindowRatio)
+	return
+}
+
+func (sc *Screen) Run() {
+	defer func() {
+		// 3D window is close
+		glfw.Terminate()
+	}()
+	for !sc.window.ShouldClose() {
 		// clean
 		glfw.PollEvents()
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 		gl.ClearColor(1, 1, 1, 1)
 
 		// prepare screen 0
-		gl.Viewport(0, 0, int32(xSplit), int32(h))
+		gl.Viewport(0, 0, int32(sc.xSplit), int32(sc.h))
 		gl.MatrixMode(gl.MODELVIEW)
 		gl.LoadIdentity()
-		if f := ds[0].Draw; f != nil {
+		if f := sc.ds[0].Draw; f != nil {
 			f()
 		}
 
 		// prepare screen 1
-		gl.Viewport(int32(xSplit), 0, int32(w-xSplit), int32(h))
+		gl.Viewport(int32(sc.xSplit), 0, int32(sc.w-sc.xSplit), int32(sc.h))
 		gl.MatrixMode(gl.MODELVIEW)
 		gl.LoadIdentity()
-		if f := ds[1].Draw; f != nil {
+		if f := sc.ds[1].Draw; f != nil {
 			f()
 		}
 
 		// actions func run
 		select {
-		case f := <-actions:
+		case f := <-(*sc.actions):
 			f()
 		default:
 		}
 
 		// end
-		window.MakeContextCurrent()
-		window.SwapBuffers()
+		sc.window.MakeContextCurrent()
+		sc.window.SwapBuffers()
 	}
-
 	return
 }
 

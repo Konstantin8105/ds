@@ -47,18 +47,20 @@ func main() {
 	for i := range ws {
 		o := new(Opengl)
 		o.color = float64(i)
-		ws[i]  = o
+		ws[i] = o
+	}
+	screen, err := ds.New("Demo", ws, make(chan func(), 1000))
+	if err != nil {
+		panic(err)
 	}
 
 	go func() {
 		for {
 			t := time.Now().Second()
-			ds.WindowRatio = float64(t) / 60.0
+			screen.ChangeRatio(float64(t) / 60)
+			time.Sleep(time.Second)
 		}
 	}()
 
-	err := ds.New("Demo", ws, make(chan func(), 1000))
-	if err != nil {
-		panic(err)
-	}
+	screen.Run()
 }
