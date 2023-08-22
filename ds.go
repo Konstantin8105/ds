@@ -48,11 +48,14 @@ func (sc *Screen) initRatio() {
 
 // New return windows.
 // Minimal `actions = make(chan func(), 1000)`.
-//
-func New(name string, ds [2]Window, actions chan func()) (sc *Screen, err error) {
+func New(name string, ds [2]Window, actions *chan func()) (sc *Screen, err error) {
+	if actions == nil {
+		err = fmt.Errorf("nil action channel")
+		return
+	}
 	// initialization screen
 	sc = new(Screen)
-	sc.actions = &actions
+	sc.actions = actions
 	sc.ds = ds
 
 	//initialization gl
@@ -85,7 +88,7 @@ func New(name string, ds [2]Window, actions chan func()) (sc *Screen, err error)
 	sc.window.SetCharCallback(func(w *glfw.Window, r rune) {
 		//action
 		if f := ds[focusIndex].SetCharCallback; f != nil {
-			actions <- func() { f(r) }
+			*actions <- func() { f(r) }
 		}
 	})
 
@@ -95,7 +98,7 @@ func New(name string, ds [2]Window, actions chan func()) (sc *Screen, err error)
 		// split by windows
 		if int(x) < sc.xSplit {
 			if f := ds[0].SetScrollCallback; f != nil {
-				actions <- func() {
+				*actions <- func() {
 					f(xoffset, yoffset)
 					focusIndex = 0
 				}
@@ -103,7 +106,7 @@ func New(name string, ds [2]Window, actions chan func()) (sc *Screen, err error)
 			return
 		}
 		if f := ds[1].SetScrollCallback; f != nil {
-			actions <- func() {
+			*actions <- func() {
 				f(xoffset, yoffset)
 				focusIndex = 1
 			}
@@ -147,7 +150,7 @@ func New(name string, ds [2]Window, actions chan func()) (sc *Screen, err error)
 		// split by windows
 		if int(x) < sc.xSplit {
 			if f := ds[0].SetMouseButtonCallback; f != nil {
-				actions <- func() {
+				*actions <- func() {
 					f(button, action, mods, x, y)
 					focusIndex = 0
 				}
@@ -155,7 +158,7 @@ func New(name string, ds [2]Window, actions chan func()) (sc *Screen, err error)
 			return
 		}
 		if f := ds[1].SetMouseButtonCallback; f != nil {
-			actions <- func() {
+			*actions <- func() {
 				f(button, action, mods, x-float64(sc.xSplit), y)
 				focusIndex = 1
 			}

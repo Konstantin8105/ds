@@ -17,7 +17,12 @@ type Opengl struct {
 	color float64
 }
 
-func (o *Opengl) SetMouseButtonCallback(button glfw.MouseButton, action glfw.Action, mods glfw.ModifierKey, x, y float64) {
+func (o *Opengl) SetMouseButtonCallback(
+	button glfw.MouseButton,
+	action glfw.Action,
+	mods glfw.ModifierKey,
+	x, y float64,
+) {
 	fmt.Fprintf(os.Stdout, "Click on window 0:[%v,%v]\n", x, y)
 }
 func (o *Opengl) SetCharCallback(r rune) {
@@ -25,6 +30,7 @@ func (o *Opengl) SetCharCallback(r rune) {
 func (o *Opengl) SetScrollCallback(xoffset, yoffset float64) {
 }
 func (o *Opengl) Draw() {
+	// return from -1 to +1
 	get := func() float64 {
 		return (rand.Float64() * 2) - 1
 	}
@@ -49,16 +55,19 @@ func main() {
 		o.color = float64(i)
 		ws[i] = o
 	}
-	screen, err := ds.New("Demo", ws, make(chan func(), 1000))
+	ch := make(chan func(), 1000)
+	screen, err := ds.New("Demo", ws, &ch)
 	if err != nil {
 		panic(err)
 	}
 
 	go func() {
 		for {
-			t := time.Now().Second()
-			screen.ChangeRatio(float64(t) / 60)
-			time.Sleep(time.Second)
+			ch <- func() {
+				t := time.Now().Second()
+				screen.ChangeRatio(float64(t) / 60*0.8+0.1)
+			}
+			time.Sleep(time.Millisecond*500)
 		}
 	}()
 
