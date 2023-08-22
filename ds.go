@@ -2,6 +2,7 @@ package ds
 
 import (
 	"fmt"
+	"math"
 	"runtime"
 
 	"github.com/go-gl/gl/v2.1/gl"
@@ -23,6 +24,9 @@ type Screen struct {
 
 func (sc *Screen) ChangeRatio(newRatio float64) {
 	if newRatio < 0 {
+		return
+	}
+	if math.Abs(newRatio-windowRatio) < 1e-6 {
 		return
 	}
 	if 1 < newRatio {
@@ -183,23 +187,33 @@ func (sc *Screen) Run() {
 		gl.Viewport(0, 0, int32(sc.xSplit), int32(sc.h))
 		gl.MatrixMode(gl.MODELVIEW)
 		gl.LoadIdentity()
+		gl.Viewport(0, 0, int32(sc.xSplit), int32(sc.h))
+		gl.MatrixMode(gl.PROJECTION)
+		gl.LoadIdentity()
 		if f := sc.ds[0].Draw; f != nil {
-			f()
+			f(0, 0, int32(sc.xSplit), int32(sc.h))
 		}
 
 		// prepare screen 1
 		gl.Viewport(int32(sc.xSplit), 0, int32(sc.w-sc.xSplit), int32(sc.h))
 		gl.MatrixMode(gl.MODELVIEW)
 		gl.LoadIdentity()
+		gl.Viewport(int32(sc.xSplit), 0, int32(sc.w-sc.xSplit), int32(sc.h))
+		gl.MatrixMode(gl.PROJECTION)
+		gl.LoadIdentity()
 		if f := sc.ds[1].Draw; f != nil {
-			f()
+			f(int32(sc.xSplit), 0, int32(sc.w-sc.xSplit), int32(sc.h))
 		}
 
-		// actions func run
-		select {
-		case f := <-(*sc.actions):
-			f()
-		default:
+		// actions
+		// run first 50 funcs
+		for i := 0; i < 50; i++ {
+			select {
+			case f := <-(*sc.actions):
+				f()
+			default:
+				break
+			}
 		}
 
 		// separator
@@ -226,5 +240,5 @@ type Window interface {
 	SetMouseButtonCallback(button glfw.MouseButton, action glfw.Action, mods glfw.ModifierKey, x, y float64)
 	SetCharCallback(r rune)
 	SetScrollCallback(xoffset, yoffset float64)
-	Draw()
+	Draw(x, y, w, h int32)
 }

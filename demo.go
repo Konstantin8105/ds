@@ -13,11 +13,11 @@ import (
 	"github.com/go-gl/glfw/v3.3/glfw"
 )
 
-type Opengl struct {
+type Triangles struct {
 	color float64
 }
 
-func (o *Opengl) SetMouseButtonCallback(
+func (o *Triangles) SetMouseButtonCallback(
 	button glfw.MouseButton,
 	action glfw.Action,
 	mods glfw.ModifierKey,
@@ -25,11 +25,11 @@ func (o *Opengl) SetMouseButtonCallback(
 ) {
 	fmt.Fprintf(os.Stdout, "Click on window 0:[%v,%v]\n", x, y)
 }
-func (o *Opengl) SetCharCallback(r rune) {
+func (o *Triangles) SetCharCallback(r rune) {
 }
-func (o *Opengl) SetScrollCallback(xoffset, yoffset float64) {
+func (o *Triangles) SetScrollCallback(xoffset, yoffset float64) {
 }
-func (o *Opengl) Draw() {
+func (o *Triangles) Draw(x, y, w, h int32) {
 	// return from -1 to +1
 	get := func() float64 {
 		return (rand.Float64() * 2) - 1
@@ -48,13 +48,107 @@ func (o *Opengl) Draw() {
 	}
 }
 
+type D3 struct {
+	alpha, betta float64
+}
+
+func (o *D3) SetMouseButtonCallback(
+	button glfw.MouseButton,
+	action glfw.Action,
+	mods glfw.ModifierKey,
+	x, y float64,
+) {
+	fmt.Fprintf(os.Stdout, "Click on window 1:[%v,%v]\n", x, y)
+}
+func (o *D3) SetCharCallback(r rune) {
+}
+func (o *D3) SetScrollCallback(xoffset, yoffset float64) {
+}
+func (o *D3) Draw(x, y, w, h int32) {
+	gl.Viewport(int32(x), int32(y), int32(w), int32(h))
+	gl.MatrixMode(gl.PROJECTION)
+	gl.LoadIdentity()
+
+	var ratio float64
+	ratio = float64(w) / float64(h)
+	ymax := 0.2 * 8000
+	scale := 1.0
+	gl.Ortho(-scale*ratio, scale*ratio, -scale, scale, float64(-ymax), float64(ymax))
+
+	gl.MatrixMode(gl.MODELVIEW)
+	gl.LoadIdentity()
+
+	gl.Translated(0, 0, 0) // TODO ?
+	gl.Rotated(o.betta, 1.0, 0.0, 0.0)
+	gl.Rotated(o.alpha, 0.0, 1.0, 0.0)
+	// cube
+	size := 0.1
+	gl.Color3d(0.1, 0.7, 0.1)
+	gl.Begin(gl.LINES)
+	{
+		gl.Vertex3d(-size, -size, -size)
+		gl.Vertex3d(+size, -size, -size)
+
+		gl.Vertex3d(-size, -size, -size)
+		gl.Vertex3d(-size, +size, -size)
+
+		gl.Vertex3d(-size, -size, -size)
+		gl.Vertex3d(-size, -size, +size)
+
+		gl.Vertex3d(+size, +size, +size)
+		gl.Vertex3d(-size, +size, +size)
+
+		gl.Vertex3d(+size, +size, +size)
+		gl.Vertex3d(+size, -size, +size)
+
+		gl.Vertex3d(+size, +size, +size)
+		gl.Vertex3d(+size, +size, -size)
+	}
+	gl.End()
+
+	gl.PointSize(5)
+	gl.Color3d(0.2, 0.8, 0.5)
+	gl.Begin(gl.POINTS)
+	{
+		gl.Vertex3d(-size, -size, -size)
+		gl.Vertex3d(+size, -size, -size)
+		gl.Vertex3d(-size, +size, -size)
+		gl.Vertex3d(-size, -size, +size)
+		gl.Vertex3d(+size, +size, -size)
+		gl.Vertex3d(+size, -size, +size)
+		gl.Vertex3d(-size, +size, +size)
+		gl.Vertex3d(+size, +size, +size)
+	}
+	gl.End()
+
+	gl.Color3d(0.5, 0.8, 0.2)
+	gl.Begin(gl.TRIANGLES)
+	{
+		gl.Vertex3d(-size, -size, -size)
+		gl.Vertex3d(+size, -size, -size)
+		gl.Vertex3d(-size, +size, -size)
+	}
+	gl.End()
+
+	gl.Color3d(0.8, 0.2, 0.5)
+	gl.Begin(gl.TRIANGLES)
+	{
+		gl.Vertex3d(-size, -size, +size)
+		gl.Vertex3d(+size, +size, -size)
+		gl.Vertex3d(+size, -size, +size)
+	}
+	gl.End()
+}
+
 func main() {
 	var ws [2]ds.Window
-	for i := range ws {
-		o := new(Opengl)
-		o.color = float64(i)
-		ws[i] = o
-	}
+
+	tr := Triangles{color: float64(1)}
+	ws[0] = &tr
+
+	d3 := D3{}
+	ws[1] = &d3
+
 	ch := make(chan func(), 1000)
 	screen, err := ds.New("Demo", ws, &ch)
 	if err != nil {
@@ -63,11 +157,19 @@ func main() {
 
 	go func() {
 		for {
+			d3.alpha += 2.0
+			d3.betta += 1.5
+			time.Sleep(time.Millisecond * 40)
+		}
+	}()
+
+	go func() {
+		for {
 			ch <- func() {
 				t := time.Now().Second()
-				screen.ChangeRatio(float64(t) / 60*0.8+0.1)
+				screen.ChangeRatio(float64(t)/60*0.8 + 0.1)
 			}
-			time.Sleep(time.Millisecond*500)
+			time.Sleep(time.Millisecond * 500)
 		}
 	}()
 
