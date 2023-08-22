@@ -202,6 +202,19 @@ func (sc *Screen) Run() {
 		default:
 		}
 
+		// separator
+		gl.Viewport(int32(sc.xSplit), 0, int32(1), int32(sc.h))
+		gl.MatrixMode(gl.MODELVIEW)
+		gl.LoadIdentity()
+		{
+			gl.LineWidth(1)
+			gl.Color3f(0.7, 0.7, 0.7)
+			gl.Begin(gl.LINES)
+			gl.Vertex2i(0, -1)
+			gl.Vertex2i(0, +1)
+			gl.End()
+		}
+
 		// end
 		sc.window.MakeContextCurrent()
 		sc.window.SwapBuffers()
