@@ -240,6 +240,9 @@ func (sc *Screen) Run() {
 				break
 			}
 		}
+
+		// update ratio
+		sc.initRatio()
 	}
 	return
 }
