@@ -14,7 +14,8 @@ import (
 )
 
 type Triangles struct {
-	color float64
+	points [][4][2]float64
+	color  float64
 }
 
 func (o *Triangles) SetMouseButtonCallback(
@@ -30,19 +31,28 @@ func (o *Triangles) SetCharCallback(r rune) {
 func (o *Triangles) SetScrollCallback(xoffset, yoffset float64) {
 }
 func (o *Triangles) Draw(x, y, w, h int32) {
-	// return from -1 to +1
-	get := func() float64 {
-		return (rand.Float64() * 2) - 1
+	size := 500
+	if len(o.points) == 0 {
+		// return from -1 to +1
+		get := func() float64 {
+			return (rand.Float64() * 2) - 1
+		}
+		o.points = make([][4][2]float64, size)
+		for i := 0; i < size; i++ {
+			for j := 0; j < 4; j++ {
+				o.points[i][j] = [2]float64{get(), get()}
+			}
+		}
 	}
-	size := 50
-	for i := 0; i < size; i++ {
+	for i, ps := range o.points {
 		gl.Begin(gl.QUADS)
-		gl.Color4d(0.8, float64(i)/float64(size), o.color, 0.5)
-		{
-			gl.Vertex2d(-get(), -get())
-			gl.Vertex2d(-get(), +get())
-			gl.Vertex2d(+get(), +get())
-			gl.Vertex2d(+get(), -get())
+		p := float64(i) / float64(size)
+		if i%2 == 0 {
+			p = float64(size-i) / float64(size)
+		}
+		gl.Color4d(0.8, p, o.color, 0.5)
+		for _, p := range ps {
+			gl.Vertex2d(p[0], p[1])
 		}
 		gl.End()
 	}
@@ -81,6 +91,14 @@ func (o *D3) Draw(x, y, w, h int32) {
 	gl.Translated(0, 0, 0) // TODO ?
 	gl.Rotated(o.betta, 1.0, 0.0, 0.0)
 	gl.Rotated(o.alpha, 0.0, 1.0, 0.0)
+
+	gl.Enable(gl.DEPTH_TEST)
+	gl.DepthFunc(gl.LEQUAL)
+	defer func() {
+		gl.DepthFunc(gl.LESS)
+		gl.Disable(gl.DEPTH_TEST)
+	}()
+
 	// cube
 	size := 0.1
 	gl.Color3d(0.1, 0.7, 0.1)
