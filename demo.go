@@ -175,9 +175,12 @@ func main() {
 
 	go func() {
 		for {
-			d3.alpha += 2.0
-			d3.betta += 1.5
-			time.Sleep(time.Millisecond * 40)
+			ch <- func() {
+				t := time.Now().Second()
+				d3.alpha = 360 * float64(t) / 60
+				d3.betta = 360 * float64(t) / 60
+			}
+			time.Sleep(time.Millisecond * 500)
 		}
 	}()
 
@@ -187,7 +190,7 @@ func main() {
 				t := time.Now().Second()
 				screen.ChangeRatio(float64(t)/60*0.8 + 0.1)
 			}
-			time.Sleep(time.Millisecond * 500)
+			time.Sleep(time.Millisecond * 50)
 		}
 	}()
 

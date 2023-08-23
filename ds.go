@@ -224,7 +224,7 @@ func (sc *Screen) Run() {
 
 		// actions
 		// run first funcs
-		for i, size := 0; i < size; i++ {
+		for i, size := 0, 50; i < size; i++ {
 			select {
 			case f := <-(*sc.actions):
 				// TODO: if action time long for example 10 minutes,
