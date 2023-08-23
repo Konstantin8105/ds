@@ -28,7 +28,7 @@ func (o *Triangles) SetMouseButtonCallback(
 }
 func (o *Triangles) SetCharCallback(r rune) {
 }
-func (o *Triangles) SetScrollCallback(xoffset, yoffset float64) {
+func (o *Triangles) SetScrollCallback(xcursor, ycursor float64, xoffset, yoffset float64) {
 }
 func (o *Triangles) Draw(x, y, w, h int32) {
 	size := 500
@@ -72,7 +72,7 @@ func (o *D3) SetMouseButtonCallback(
 }
 func (o *D3) SetCharCallback(r rune) {
 }
-func (o *D3) SetScrollCallback(xoffset, yoffset float64) {
+func (o *D3) SetScrollCallback(xcursor, ycursor float64, xoffset, yoffset float64) {
 }
 func (o *D3) Draw(x, y, w, h int32) {
 	gl.Viewport(int32(x), int32(y), int32(w), int32(h))
@@ -190,7 +190,7 @@ func main() {
 				t := time.Now().Second()
 				screen.ChangeRatio(float64(t)/60*0.8 + 0.1)
 			}
-			time.Sleep(time.Millisecond * 50)
+			time.Sleep(time.Millisecond * 500)
 		}
 	}()
 

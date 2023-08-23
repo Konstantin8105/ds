@@ -98,12 +98,12 @@ func New(name string, ds [2]Window, actions *chan func()) (sc *Screen, err error
 
 	sc.window.SetScrollCallback(func(w *glfw.Window, xoffset, yoffset float64) {
 		//action
-		x, _ := sc.window.GetCursorPos()
+		x, y := sc.window.GetCursorPos()
 		// split by windows
 		if int(x) < sc.xSplit {
 			if f := ds[0].SetScrollCallback; f != nil {
 				*actions <- func() {
-					f(xoffset, yoffset)
+					f(x, y, xoffset, yoffset)
 					focusIndex = 0
 				}
 			}
@@ -111,7 +111,7 @@ func New(name string, ds [2]Window, actions *chan func()) (sc *Screen, err error
 		}
 		if f := ds[1].SetScrollCallback; f != nil {
 			*actions <- func() {
-				f(xoffset, yoffset)
+				f(x-float64(sc.xSplit), y, xoffset, yoffset)
 				focusIndex = 1
 			}
 		}
@@ -239,8 +239,16 @@ func (sc *Screen) Run() {
 }
 
 type Window interface {
-	SetMouseButtonCallback(button glfw.MouseButton, action glfw.Action, mods glfw.ModifierKey, x, y float64)
+	SetMouseButtonCallback(
+		button glfw.MouseButton,
+		action glfw.Action,
+		mods glfw.ModifierKey,
+		xcursor, ycursor float64,
+	)
 	SetCharCallback(r rune)
-	SetScrollCallback(xoffset, yoffset float64)
+	SetScrollCallback(
+		xcursor, ycursor float64,
+		xoffset, yoffset float64,
+	)
 	Draw(x, y, w, h int32)
 }
