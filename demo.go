@@ -30,6 +30,13 @@ func (o *Triangles) SetCharCallback(r rune) {
 }
 func (o *Triangles) SetScrollCallback(xcursor, ycursor float64, xoffset, yoffset float64) {
 }
+func (o *Triangles) SetKeyCallback(
+	key glfw.Key,
+	scancode int,
+	action glfw.Action,
+	mods glfw.ModifierKey,
+) {
+}
 func (o *Triangles) Draw(x, y, w, h int32) {
 	size := 500
 	if len(o.points) == 0 {
@@ -73,6 +80,13 @@ func (o *D3) SetMouseButtonCallback(
 func (o *D3) SetCharCallback(r rune) {
 }
 func (o *D3) SetScrollCallback(xcursor, ycursor float64, xoffset, yoffset float64) {
+}
+func (o *D3) SetKeyCallback(
+	key glfw.Key,
+	scancode int,
+	action glfw.Action,
+	mods glfw.ModifierKey,
+) {
 }
 func (o *D3) Draw(x, y, w, h int32) {
 	gl.Viewport(int32(x), int32(y), int32(w), int32(h))

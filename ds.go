@@ -117,8 +117,6 @@ func New(name string, ds [2]Window, actions *chan func()) (sc *Screen, err error
 		}
 	})
 
-	// TODO:
-
 	// func (w *Window) SetKeyCallback(cbfun KeyCallback) (previous KeyCallback)
 	//     SetKeyCallback sets the key callback which is called when a key is pressed,
 	//     repeated or released.
@@ -132,7 +130,15 @@ func New(name string, ds [2]Window, actions *chan func()) (sc *Screen, err error
 	//     by the fact that the synthetic ones are generated after the window has lost
 	//     focus, i.e. Focused will be false and the focus callback will have already
 	//     been called.
+	sc.window.SetKeyCallback(
+		func(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
+			//action
+			if f := ds[focusIndex].SetKeyCallback; f != nil {
+				*actions <- func() { f(key, scancode, action, mods) }
+			}
+		})
 
+	// TODO:
 	// func (w *Window) SetCursorEnterCallback(cbfun CursorEnterCallback) (previous CursorEnterCallback)
 	//     SetCursorEnterCallback the cursor boundary crossing callback which is called
 	//     when the cursor enters or leaves the client area of the window.
@@ -249,6 +255,12 @@ type Window interface {
 	SetScrollCallback(
 		xcursor, ycursor float64,
 		xoffset, yoffset float64,
+	)
+	SetKeyCallback(
+		key glfw.Key,
+		scancode int,
+		action glfw.Action,
+		mods glfw.ModifierKey,
 	)
 	Draw(x, y, w, h int32)
 }
