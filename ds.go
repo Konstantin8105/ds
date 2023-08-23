@@ -205,17 +205,6 @@ func (sc *Screen) Run() {
 			f(int32(sc.xSplit), 0, int32(sc.w-sc.xSplit), int32(sc.h))
 		}
 
-		// actions
-		// run first 50 funcs
-		for i := 0; i < 50; i++ {
-			select {
-			case f := <-(*sc.actions):
-				f()
-			default:
-				break
-			}
-		}
-
 		// separator
 		gl.Viewport(int32(sc.xSplit), 0, int32(1), int32(sc.h))
 		gl.MatrixMode(gl.MODELVIEW)
@@ -232,6 +221,19 @@ func (sc *Screen) Run() {
 		// end
 		sc.window.MakeContextCurrent()
 		sc.window.SwapBuffers()
+
+		// actions
+		// run first funcs
+		for i, size := 0; i < size; i++ {
+			select {
+			case f := <-(*sc.actions):
+				// TODO: if action time long for example 10 minutes,
+				// then screen is freeze.
+				f()
+			default:
+				break
+			}
+		}
 	}
 	return
 }
