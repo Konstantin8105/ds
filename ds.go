@@ -22,6 +22,24 @@ type Screen struct {
 	window       *glfw.Window
 }
 
+func (sc *Screen) UpdateWindow(pos int, w Window) {
+	if sc.actions == nil {
+		return
+	}
+	if w == nil {
+		return
+	}
+	if pos < 0 {
+		return
+	}
+	if 1 < pos {
+		return
+	}
+	*sc.actions <- func() {
+		sc.ds[pos] = w
+	}
+}
+
 func (sc *Screen) ChangeRatio(newRatio float64) {
 	if newRatio < 0 {
 		return
@@ -91,7 +109,7 @@ func New(name string, ds [2]Window, actions *chan func()) (sc *Screen, err error
 
 	sc.window.SetCharCallback(func(w *glfw.Window, r rune) {
 		//action
-		if f := ds[focusIndex].SetCharCallback; f != nil {
+		if f := sc.ds[focusIndex].SetCharCallback; f != nil {
 			*actions <- func() { f(r) }
 		}
 	})
@@ -101,7 +119,7 @@ func New(name string, ds [2]Window, actions *chan func()) (sc *Screen, err error
 		x, y := sc.window.GetCursorPos()
 		// split by windows
 		if int(x) < sc.xSplit {
-			if f := ds[0].SetScrollCallback; f != nil {
+			if f := sc.ds[0].SetScrollCallback; f != nil {
 				*actions <- func() {
 					f(x, y, xoffset, yoffset)
 					focusIndex = 0
@@ -109,7 +127,7 @@ func New(name string, ds [2]Window, actions *chan func()) (sc *Screen, err error
 			}
 			return
 		}
-		if f := ds[1].SetScrollCallback; f != nil {
+		if f := sc.ds[1].SetScrollCallback; f != nil {
 			*actions <- func() {
 				f(x-float64(sc.xSplit), y, xoffset, yoffset)
 				focusIndex = 1
@@ -133,7 +151,7 @@ func New(name string, ds [2]Window, actions *chan func()) (sc *Screen, err error
 	sc.window.SetKeyCallback(
 		func(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
 			//action
-			if f := ds[focusIndex].SetKeyCallback; f != nil {
+			if f := sc.ds[focusIndex].SetKeyCallback; f != nil {
 				*actions <- func() { f(key, scancode, action, mods) }
 			}
 		})
@@ -159,7 +177,7 @@ func New(name string, ds [2]Window, actions *chan func()) (sc *Screen, err error
 		x, y := sc.window.GetCursorPos()
 		// split by windows
 		if int(x) < sc.xSplit {
-			if f := ds[0].SetMouseButtonCallback; f != nil {
+			if f := sc.ds[0].SetMouseButtonCallback; f != nil {
 				*actions <- func() {
 					f(button, action, mods, x, y)
 					focusIndex = 0
@@ -167,7 +185,7 @@ func New(name string, ds [2]Window, actions *chan func()) (sc *Screen, err error
 			}
 			return
 		}
-		if f := ds[1].SetMouseButtonCallback; f != nil {
+		if f := sc.ds[1].SetMouseButtonCallback; f != nil {
 			*actions <- func() {
 				f(button, action, mods, x-float64(sc.xSplit), y)
 				focusIndex = 1
