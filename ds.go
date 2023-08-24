@@ -17,6 +17,7 @@ func init() {
 
 type Screen struct {
 	ds           [2]Window
+	focusIndex   int
 	w, h, xSplit int
 	actions      *chan func()
 	window       *glfw.Window
@@ -104,8 +105,7 @@ func New(name string, ds [2]Window, actions *chan func()) (sc *Screen, err error
 
 	sc.initRatio()
 
-	// var w, h, xSplit int
-	var focusIndex uint = 0
+	sc.focusIndex = 0 // default value
 
 	// func (w *Window) SetCharCallback(cbfun CharCallback) (previous CharCallback)
 	//     SetCharCallback sets the character callback which is called when a Unicode
@@ -124,7 +124,7 @@ func New(name string, ds [2]Window, actions *chan func()) (sc *Screen, err error
 	//     events.
 	sc.window.SetCharCallback(func(w *glfw.Window, r rune) {
 		//action
-		if f := sc.ds[focusIndex].SetCharCallback; f != nil {
+		if f := sc.ds[sc.focusIndex].SetCharCallback; f != nil {
 			*actions <- func() { f(r) }
 		}
 	})
@@ -140,7 +140,7 @@ func New(name string, ds [2]Window, actions *chan func()) (sc *Screen, err error
 			if f := sc.ds[0].SetScrollCallback; f != nil {
 				*actions <- func() {
 					f(x, y, xoffset, yoffset)
-					focusIndex = 0
+					sc.focusIndex = 0
 				}
 			}
 			return
@@ -148,7 +148,7 @@ func New(name string, ds [2]Window, actions *chan func()) (sc *Screen, err error
 		if f := sc.ds[1].SetScrollCallback; f != nil {
 			*actions <- func() {
 				f(x-float64(sc.xSplit), y, xoffset, yoffset)
-				focusIndex = 1
+				sc.focusIndex = 1
 			}
 		}
 	})
@@ -169,7 +169,7 @@ func New(name string, ds [2]Window, actions *chan func()) (sc *Screen, err error
 	sc.window.SetKeyCallback(
 		func(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
 			//action
-			if f := sc.ds[focusIndex].SetKeyCallback; f != nil {
+			if f := sc.ds[sc.focusIndex].SetKeyCallback; f != nil {
 				*actions <- func() { f(key, scancode, action, mods) }
 			}
 		})
@@ -193,10 +193,10 @@ func New(name string, ds [2]Window, actions *chan func()) (sc *Screen, err error
 	sc.window.SetCursorPosCallback(
 		func(w *glfw.Window, xpos, ypos float64) {
 			// action
-			if focusIndex == 1 {
+			if sc.focusIndex == 1 {
 				xpos = xpos - float64(sc.xSplit)
 			}
-			if f := sc.ds[focusIndex].SetCursorPosCallback; f != nil {
+			if f := sc.ds[sc.focusIndex].SetCursorPosCallback; f != nil {
 				*actions <- func() { f(xpos, ypos) }
 			}
 		})
@@ -221,12 +221,12 @@ func New(name string, ds [2]Window, actions *chan func()) (sc *Screen, err error
 		switch action {
 		case glfw.Press: // The key or button was pressed.
 			if x < float64(sc.xSplit) {
-				focusIndex = 0
+				sc.focusIndex = 0
 			} else {
-				focusIndex = 1
+				sc.focusIndex = 1
 				x = x - float64(sc.xSplit)
 			}
-			if f := sc.ds[focusIndex].SetMouseButtonCallback; f != nil {
+			if f := sc.ds[sc.focusIndex].SetMouseButtonCallback; f != nil {
 				*actions <- func() {
 					f(button, action, mods, x, y)
 				}
@@ -234,13 +234,12 @@ func New(name string, ds [2]Window, actions *chan func()) (sc *Screen, err error
 		default:
 			// The key or button was released.
 			// case glfw.Release:
-			if focusIndex == 1 {
+			if sc.focusIndex == 1 {
 				x = x - float64(sc.xSplit)
 			}
-			if f := sc.ds[focusIndex].SetMouseButtonCallback; f != nil {
+			if f := sc.ds[sc.focusIndex].SetMouseButtonCallback; f != nil {
 				*actions <- func() {
 					f(button, action, mods, x, y)
-					focusIndex = 0
 				}
 			}
 		}

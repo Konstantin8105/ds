@@ -38,6 +38,7 @@ func (o *Triangles) SetKeyCallback(
 	action glfw.Action,
 	mods glfw.ModifierKey,
 ) {
+	fmt.Fprintf(os.Stdout, "Key on window 0: %v\n", key)
 }
 func (o *Triangles) Draw(x, y, w, h int32) {
 	size := 500
@@ -91,6 +92,7 @@ func (o *D3) SetKeyCallback(
 	action glfw.Action,
 	mods glfw.ModifierKey,
 ) {
+	fmt.Fprintf(os.Stdout, "Key on window 1: %v\n", key)
 }
 func (o *D3) Draw(x, y, w, h int32) {
 	gl.Viewport(int32(x), int32(y), int32(w), int32(h))
