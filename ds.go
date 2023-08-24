@@ -286,6 +286,9 @@ func (sc *Screen) Run() {
 		gl.Viewport(int32(sc.xSplit), 0, int32(1), int32(sc.h))
 		gl.MatrixMode(gl.MODELVIEW)
 		gl.LoadIdentity()
+		gl.Viewport(int32(sc.xSplit), 0, int32(1), int32(sc.h))
+		gl.MatrixMode(gl.PROJECTION)
+		gl.LoadIdentity()
 		{
 			gl.LineWidth(1)
 			gl.Color3f(0.7, 0.7, 0.7)
