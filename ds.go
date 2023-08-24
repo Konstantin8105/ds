@@ -107,6 +107,21 @@ func New(name string, ds [2]Window, actions *chan func()) (sc *Screen, err error
 	// var w, h, xSplit int
 	var focusIndex uint = 0
 
+	// func (w *Window) SetCharCallback(cbfun CharCallback) (previous CharCallback)
+	//     SetCharCallback sets the character callback which is called when a Unicode
+	//     character is input.
+	//
+	//     The character callback is intended for Unicode text input. As it deals with
+	//     characters, it is keyboard layout dependent, whereas the key callback is
+	//     not. Characters do not map 1:1 to physical keys, as a key may produce zero,
+	//     one or more characters. If you want to know whether a specific physical key
+	//     was pressed or released, see the key callback instead.
+	//
+	//     The character callback behaves as system text input normally does and will
+	//     not be called if modifier keys are held down that would prevent normal text
+	//     input on that platform, for example a Super (Command) key on OS X or Alt key
+	//     on Windows. There is a character with modifiers callback that receives these
+	//     events.
 	sc.window.SetCharCallback(func(w *glfw.Window, r rune) {
 		//action
 		if f := sc.ds[focusIndex].SetCharCallback; f != nil {
@@ -114,6 +129,9 @@ func New(name string, ds [2]Window, actions *chan func()) (sc *Screen, err error
 		}
 	})
 
+	// func (w *Window) SetScrollCallback(cbfun ScrollCallback) (previous ScrollCallback)
+	//     SetScrollCallback sets the scroll callback which is called when a scrolling
+	//     device is used, such as a mouse wheel or scrolling area of a touchpad.
 	sc.window.SetScrollCallback(func(w *glfw.Window, xoffset, yoffset float64) {
 		//action
 		x, y := sc.window.GetCursorPos()
@@ -167,6 +185,28 @@ func New(name string, ds [2]Window, actions *chan func()) (sc *Screen, err error
 	//
 	//     This function may only be called from the main thread.
 
+	// func (w *Window) SetCursorPosCallback(cbfun CursorPosCallback) (previous CursorPosCallback)
+	//
+	//	SetCursorPosCallback sets the cursor position callback which is called when
+	//	the cursor is moved. The callback is provided with the position relative to
+	//	the upper-left corner of the client area of the window.
+	sc.window.SetCursorPosCallback(
+		func(w *glfw.Window, xpos, ypos float64) {
+			// action
+			if f := sc.ds[focusIndex].SetCursorPosCallback; f != nil {
+				*actions <- func() { f(xpos, ypos) }
+			}
+		})
+
+	// func (w *Window) SetMouseButtonCallback(cbfun MouseButtonCallback) (previous MouseButtonCallback)
+	//     SetMouseButtonCallback sets the mouse button callback which is called when a
+	//     mouse button is pressed or released.
+	//
+	//     When a window loses focus, it will generate synthetic mouse button release
+	//     events for all pressed mouse buttons. You can tell these events from
+	//     user-generated events by the fact that the synthetic ones are generated
+	//     after the window has lost focus, i.e. Focused will be false and the focus
+	//     callback will have already been called.
 	sc.window.SetMouseButtonCallback(func(
 		w *glfw.Window,
 		button glfw.MouseButton,
@@ -282,6 +322,10 @@ type Window interface {
 		scancode int,
 		action glfw.Action,
 		mods glfw.ModifierKey,
+	)
+	SetCursorPosCallback(
+		xpos float64,
+		ypos float64,
 	)
 	Draw(x, y, w, h int32)
 }

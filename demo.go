@@ -30,6 +30,8 @@ func (o *Triangles) SetCharCallback(r rune) {
 }
 func (o *Triangles) SetScrollCallback(xcursor, ycursor float64, xoffset, yoffset float64) {
 }
+func (o *Triangles) SetCursorPosCallback(xpos float64, ypos float64) {
+}
 func (o *Triangles) SetKeyCallback(
 	key glfw.Key,
 	scancode int,
@@ -78,6 +80,8 @@ func (o *D3) SetMouseButtonCallback(
 	fmt.Fprintf(os.Stdout, "Click on window 1:[%v,%v]\n", x, y)
 }
 func (o *D3) SetCharCallback(r rune) {
+}
+func (o *D3) SetCursorPosCallback(xpos float64, ypos float64) {
 }
 func (o *D3) SetScrollCallback(xcursor, ycursor float64, xoffset, yoffset float64) {
 }
