@@ -221,20 +221,19 @@ func New(name string, ds [2]Window, actions *chan func()) (sc *Screen, err error
 				focusIndex = 0
 			} else {
 				focusIndex = 1
-				//x = x - float64(sc.xSplit)
+				x = x - float64(sc.xSplit)
 			}
 			if f := sc.ds[focusIndex].SetMouseButtonCallback; f != nil {
 				*actions <- func() {
 					f(button, action, mods, x, y)
-					focusIndex = 0
 				}
 			}
 		default:
 			// The key or button was released.
 			// case glfw.Release:
-		// if float64(sc.xSplit) < x {
-		// 	x = x - float64(sc.xSplit)
-		// }
+			if float64(sc.xSplit) < x {
+				x = x - float64(sc.xSplit)
+			}
 			if f := sc.ds[focusIndex].SetMouseButtonCallback; f != nil {
 				*actions <- func() {
 					f(button, action, mods, x, y)
