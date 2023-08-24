@@ -229,7 +229,9 @@ func New(name string, ds [2]Window, actions *chan func()) (sc *Screen, err error
 					focusIndex = 0
 				}
 			}
-		case glfw.Release: // The key or button was released.
+		default:
+			// The key or button was released.
+			// case glfw.Release:
 			if float64(sc.xSplit) < x {
 				x = x - float64(sc.xSplit)
 			}
@@ -239,10 +241,6 @@ func New(name string, ds [2]Window, actions *chan func()) (sc *Screen, err error
 					focusIndex = 0
 				}
 			}
-		default:
-			// The key was held down until it repeated.
-			// case glfw.Repeat:
-			// do nothing
 		}
 	})
 
