@@ -215,21 +215,34 @@ func New(name string, ds [2]Window, actions *chan func()) (sc *Screen, err error
 	) {
 		//action
 		x, y := sc.window.GetCursorPos()
-		// split by windows
-		if int(x) < sc.xSplit {
-			if f := sc.ds[0].SetMouseButtonCallback; f != nil {
+		switch action {
+		case glfw.Press: // The key or button was pressed.
+			if x < float64(sc.xSplit) {
+				focusIndex = 0
+			} else {
+				focusIndex = 1
+				x = x - float64(sc.xSplit)
+			}
+			if f := sc.ds[focusIndex].SetMouseButtonCallback; f != nil {
 				*actions <- func() {
 					f(button, action, mods, x, y)
 					focusIndex = 0
 				}
 			}
-			return
-		}
-		if f := sc.ds[1].SetMouseButtonCallback; f != nil {
-			*actions <- func() {
-				f(button, action, mods, x-float64(sc.xSplit), y)
-				focusIndex = 1
+		case glfw.Release: // The key or button was released.
+			if float64(sc.xSplit) < x {
+				x = x - float64(sc.xSplit)
 			}
+			if f := sc.ds[focusIndex].SetMouseButtonCallback; f != nil {
+				*actions <- func() {
+					f(button, action, mods, x, y)
+					focusIndex = 0
+				}
+			}
+		default:
+			// The key was held down until it repeated.
+			// case glfw.Repeat:
+			// do nothing
 		}
 	})
 
