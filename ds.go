@@ -193,6 +193,9 @@ func New(name string, ds [2]Window, actions *chan func()) (sc *Screen, err error
 	sc.window.SetCursorPosCallback(
 		func(w *glfw.Window, xpos, ypos float64) {
 			// action
+			if focusIndex == 1 {
+				xpos = xpos - float64(sc.xSplit)
+			}
 			if f := sc.ds[focusIndex].SetCursorPosCallback; f != nil {
 				*actions <- func() { f(xpos, ypos) }
 			}
@@ -231,7 +234,7 @@ func New(name string, ds [2]Window, actions *chan func()) (sc *Screen, err error
 		default:
 			// The key or button was released.
 			// case glfw.Release:
-			if float64(sc.xSplit) < x {
+			if focusIndex == 1 {
 				x = x - float64(sc.xSplit)
 			}
 			if f := sc.ds[focusIndex].SetMouseButtonCallback; f != nil {
