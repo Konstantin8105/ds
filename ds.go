@@ -248,7 +248,7 @@ func New(name string, ds [2]Window, actions *chan func()) (sc *Screen, err error
 	return
 }
 
-func (sc *Screen) Run() {
+func (sc *Screen) Run(quit <-chan struct{}) {
 	defer func() {
 		// 3D window is close
 		glfw.Terminate()
@@ -312,6 +312,19 @@ func (sc *Screen) Run() {
 			default:
 				break
 			}
+		}
+
+		// quit
+		isQuit := false
+		select {
+		case _, ok := <-quit:
+			if !ok {
+				isQuit = true
+			}
+		default:
+		}
+		if isQuit {
+			break
 		}
 
 		// update ratio

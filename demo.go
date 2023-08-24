@@ -193,6 +193,8 @@ func main() {
 		panic(err)
 	}
 
+	quit := make(chan struct{})
+
 	go func() {
 		for {
 			ch <- func() {
@@ -214,5 +216,10 @@ func main() {
 		}
 	}()
 
-	screen.Run()
+	go func() {
+		time.Sleep(5 * time.Second)
+		close(quit)
+	}()
+
+	screen.Run(quit)
 }
