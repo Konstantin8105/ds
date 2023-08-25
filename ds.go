@@ -250,6 +250,7 @@ func New(name string, ds [2]Window, actions *chan func()) (sc *Screen, err error
 
 func (sc *Screen) Run(quit <-chan struct{}) {
 	defer func() {
+		sc.window.Destroy();
 		// 3D window is close
 		glfw.Terminate()
 	}()
