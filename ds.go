@@ -98,6 +98,7 @@ func New(name string, ds [2]Window, actions *chan func()) (sc *Screen, err error
 	sc.window.MakeContextCurrent()
 
 	if err = gl.Init(); err != nil {
+		glfw.Terminate()
 		return
 	}
 
