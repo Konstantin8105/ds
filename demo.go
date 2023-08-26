@@ -196,13 +196,17 @@ func main() {
 	quit := make(chan struct{})
 
 	go func() {
+		var t float64
 		for {
 			ch <- func() {
-				t := time.Now().Second()
-				d3.alpha = 360 * float64(t) / 60
-				d3.betta = 360 * float64(t) / 60
+				// t := time.Now().Second()
+				// d3.alpha = 360 * float64(t) / 60
+				// d3.betta = 360 * float64(t) / 60
+				t += 0.05
+				d3.alpha = 360 * t
+				d3.betta = 360 * t
 			}
-			time.Sleep(time.Millisecond * 500)
+			time.Sleep(time.Millisecond * 100)
 		}
 	}()
 
