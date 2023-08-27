@@ -19,7 +19,7 @@ type Screen struct {
 	ds           [2]Window
 	focusIndex   int
 	w, h, xSplit int
-	actions      *chan func()
+	actions      *chan func() (forceUpdateScreen bool)
 	window       *glfw.Window
 }
 
@@ -36,8 +36,9 @@ func (sc *Screen) UpdateWindow(pos int, w Window) {
 	if 1 < pos {
 		return
 	}
-	*sc.actions <- func() {
+	*sc.actions <- func() (forceUpdateScreen bool) {
 		sc.ds[pos] = w
+		return true
 	}
 }
 
@@ -57,9 +58,10 @@ func (sc *Screen) ChangeRatio(newRatio float64) {
 	if 0.9 < newRatio {
 		newRatio = 0.9
 	}
-	(*sc.actions) <- func() {
+	(*sc.actions) <- func() (forceUpdateScreen bool) {
 		windowRatio = newRatio
 		sc.initRatio()
+		return true
 	}
 	return
 }
@@ -71,7 +73,14 @@ func (sc *Screen) initRatio() {
 
 // New return windows.
 // Minimal `actions = make(chan func(), 1000)`.
-func New(name string, ds [2]Window, actions *chan func()) (sc *Screen, err error) {
+func New(
+	name string,
+	ds [2]Window,
+	actions *chan func() (forceUpdateScreen bool),
+) (
+	sc *Screen,
+	err error,
+) {
 	if actions == nil {
 		err = fmt.Errorf("nil action channel")
 		return
@@ -126,7 +135,10 @@ func New(name string, ds [2]Window, actions *chan func()) (sc *Screen, err error
 	sc.window.SetCharCallback(func(w *glfw.Window, r rune) {
 		//action
 		if f := sc.ds[sc.focusIndex].SetCharCallback; f != nil {
-			*actions <- func() { f(r) }
+			*actions <- func() (fus bool) {
+				f(r)
+				return false
+			}
 		}
 	})
 
@@ -139,17 +151,19 @@ func New(name string, ds [2]Window, actions *chan func()) (sc *Screen, err error
 		// split by windows
 		if int(x) < sc.xSplit {
 			if f := sc.ds[0].SetScrollCallback; f != nil {
-				*actions <- func() {
+				*actions <- func() (fus bool) {
 					f(x, y, xoffset, yoffset)
 					sc.focusIndex = 0
+					return false
 				}
 			}
 			return
 		}
 		if f := sc.ds[1].SetScrollCallback; f != nil {
-			*actions <- func() {
+			*actions <- func() (fus bool) {
 				f(x-float64(sc.xSplit), y, xoffset, yoffset)
 				sc.focusIndex = 1
+				return false
 			}
 		}
 	})
@@ -171,7 +185,10 @@ func New(name string, ds [2]Window, actions *chan func()) (sc *Screen, err error
 		func(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
 			//action
 			if f := sc.ds[sc.focusIndex].SetKeyCallback; f != nil {
-				*actions <- func() { f(key, scancode, action, mods) }
+				*actions <- func() (fus bool) {
+					f(key, scancode, action, mods)
+					return false
+				}
 			}
 		})
 
@@ -198,7 +215,10 @@ func New(name string, ds [2]Window, actions *chan func()) (sc *Screen, err error
 				xpos = xpos - float64(sc.xSplit)
 			}
 			if f := sc.ds[sc.focusIndex].SetCursorPosCallback; f != nil {
-				*actions <- func() { f(xpos, ypos) }
+				*actions <- func() (fus bool) {
+					f(xpos, ypos)
+					return false
+				}
 			}
 		})
 
@@ -228,8 +248,9 @@ func New(name string, ds [2]Window, actions *chan func()) (sc *Screen, err error
 				x = x - float64(sc.xSplit)
 			}
 			if f := sc.ds[sc.focusIndex].SetMouseButtonCallback; f != nil {
-				*actions <- func() {
+				*actions <- func() (fus bool) {
 					f(button, action, mods, x, y)
+					return false
 				}
 			}
 		default:
@@ -239,8 +260,9 @@ func New(name string, ds [2]Window, actions *chan func()) (sc *Screen, err error
 				x = x - float64(sc.xSplit)
 			}
 			if f := sc.ds[sc.focusIndex].SetMouseButtonCallback; f != nil {
-				*actions <- func() {
+				*actions <- func() (fus bool) {
 					f(button, action, mods, x, y)
+					return false
 				}
 			}
 		}
@@ -251,7 +273,7 @@ func New(name string, ds [2]Window, actions *chan func()) (sc *Screen, err error
 
 func (sc *Screen) Run(quit <-chan struct{}) {
 	defer func() {
-		sc.window.Destroy();
+		sc.window.Destroy()
 		// 3D window is close
 		glfw.Terminate()
 	}()
@@ -306,12 +328,23 @@ func (sc *Screen) Run(quit <-chan struct{}) {
 		// actions
 		// run first funcs
 		for i, size := 0, 50; i < size; i++ {
+			forceUpdateScreen := false
 			select {
-			case f := <-(*sc.actions):
+			case f, ok := <-(*sc.actions):
+				if !ok {
+					// probably closed channel
+					break
+				}
 				// TODO: if action time long for example 10 minutes,
 				// then screen is freeze.
-				f()
+				forceUpdateScreen = f()
+				if forceUpdateScreen {
+					break
+				}
 			default:
+				break
+			}
+			if forceUpdateScreen {
 				break
 			}
 		}

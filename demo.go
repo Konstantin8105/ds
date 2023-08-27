@@ -187,7 +187,7 @@ func main() {
 	d3 := D3{}
 	ws[1] = &d3
 
-	ch := make(chan func(), 1000)
+	ch := make(chan func()(fus bool), 1000)
 	screen, err := ds.New("Demo", ws, &ch)
 	if err != nil {
 		panic(err)
@@ -198,13 +198,14 @@ func main() {
 	go func() {
 		var t float64
 		for {
-			ch <- func() {
+			ch <- func() (fus bool){
 				// t := time.Now().Second()
 				// d3.alpha = 360 * float64(t) / 60
 				// d3.betta = 360 * float64(t) / 60
 				t += 0.05
 				d3.alpha = 360 * t
 				d3.betta = 360 * t
+				return true
 			}
 			time.Sleep(time.Millisecond * 100)
 		}
@@ -212,9 +213,10 @@ func main() {
 
 	go func() {
 		for {
-			ch <- func() {
+			ch <- func()(fus bool) {
 				t := time.Now().Second()
 				screen.ChangeRatio(float64(t)/60*0.8 + 0.1)
+				return true
 			}
 			time.Sleep(time.Millisecond * 500)
 		}
