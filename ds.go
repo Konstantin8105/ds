@@ -15,11 +15,13 @@ func init() {
 	runtime.LockOSThread()
 }
 
+type Action = func() (forceUpdateScreen bool)
+
 type Screen struct {
 	ds           [2]Window
 	focusIndex   int
 	w, h, xSplit int
-	actions      *chan func() (forceUpdateScreen bool)
+	actions      *chan Action
 	window       *glfw.Window
 }
 
@@ -76,7 +78,7 @@ func (sc *Screen) initRatio() {
 func New(
 	name string,
 	ds [2]Window,
-	actions *chan func() (forceUpdateScreen bool),
+	actions *chan Action,
 ) (
 	sc *Screen,
 	err error,
