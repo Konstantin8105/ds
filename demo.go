@@ -70,6 +70,7 @@ func (o *Triangles) Draw(x, y, w, h int32) {
 
 type D3 struct {
 	alpha, betta float64
+	actions      *chan ds.Action
 }
 
 func (o *D3) SetMouseButtonCallback(
@@ -78,7 +79,10 @@ func (o *D3) SetMouseButtonCallback(
 	mods glfw.ModifierKey,
 	x, y float64,
 ) {
-	fmt.Fprintf(os.Stdout, "Click on window 1:[%v,%v]\n", x, y)
+	*o.actions <- func() (fus bool) {
+		fmt.Fprintf(os.Stdout, "Click on window 1:[%v,%v]\n", x, y)
+		return false
+	}
 }
 func (o *D3) SetCharCallback(r rune) {
 }
@@ -180,14 +184,14 @@ func (o *D3) Draw(x, y, w, h int32) {
 
 func main() {
 	var ws [2]ds.Window
+	ch := make(chan func() (fus bool), 1000)
 
 	tr := Triangles{color: float64(1)}
 	ws[0] = &tr
 
-	d3 := D3{}
+	d3 := D3{actions: &ch}
 	ws[1] = &d3
 
-	ch := make(chan func()(fus bool), 1000)
 	screen, err := ds.New("Demo", ws, &ch)
 	if err != nil {
 		panic(err)
@@ -198,7 +202,7 @@ func main() {
 	go func() {
 		var t float64
 		for {
-			ch <- func() (fus bool){
+			ch <- func() (fus bool) {
 				// t := time.Now().Second()
 				// d3.alpha = 360 * float64(t) / 60
 				// d3.betta = 360 * float64(t) / 60
@@ -213,7 +217,7 @@ func main() {
 
 	go func() {
 		for {
-			ch <- func()(fus bool) {
+			ch <- func() (fus bool) {
 				t := time.Now().Second()
 				screen.ChangeRatio(float64(t)/60*0.8 + 0.1)
 				return true
