@@ -231,5 +231,5 @@ func main() {
 		close(quit)
 	}()
 
-	screen.Run(quit)
+	screen.Run(&quit)
 }

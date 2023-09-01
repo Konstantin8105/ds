@@ -273,7 +273,7 @@ func New(
 	return
 }
 
-func (sc *Screen) Run(quit <-chan struct{}) {
+func (sc *Screen) Run(quit *chan struct{}) {
 	defer func() {
 		sc.window.Destroy()
 		// 3D window is close
@@ -354,7 +354,7 @@ func (sc *Screen) Run(quit <-chan struct{}) {
 		// quit
 		isQuit := false
 		select {
-		case _, ok := <-quit:
+		case _, ok := <-*quit:
 			if !ok {
 				isQuit = true
 			}
