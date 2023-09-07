@@ -2,7 +2,11 @@ package ds
 
 import (
 	"fmt"
+	"image"
+	"image/png"
+	"image/color"
 	"math"
+	"os"
 	"runtime"
 
 	"github.com/go-gl/gl/v2.1/gl"
@@ -271,6 +275,47 @@ func New(
 	})
 
 	return
+}
+
+func (sc *Screen) Screenshot(filename string, afterSave func()) {
+	*sc.actions <- func() bool { return true }
+	*sc.actions <- func() bool {
+		// flush opengl
+		gl.Flush()
+		gl.Finish()
+		// get pixels from opengl
+		sizeX := sc.w
+		sizeY := sc.h
+		size := sizeX * sizeY
+		data := make([]uint8, 4*size)
+		gl.ReadPixels(0, 0, int32(sizeX), int32(sizeY),
+			gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(&data[0]))
+		// create picture
+		img := image.NewNRGBA(image.Rect(0, 0, sizeX, sizeY))
+		for y := 0; y < sizeY; y++ {
+			for x := 0; x < sizeX; x++ {
+				c := data[x+y*sizeX:]
+				img.Set(x, y, color.NRGBA{R: c[0], G: c[1], B: c[2], A: c[3]})
+			}
+		}
+		// run external function
+		f, err := os.Create(filename)
+		if err != nil {
+			return true
+		}
+		if err := png.Encode(f, img); err != nil {
+			return true
+		}
+		if err := f.Close(); err != nil {
+			return true
+		}
+		// run after save
+		if f := afterSave; f != nil {
+			f()
+		}
+		// update screen
+		return true
+	}
 }
 
 func (sc *Screen) Run(quit <-chan struct{}) {
