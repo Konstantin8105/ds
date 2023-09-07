@@ -294,7 +294,7 @@ func (sc *Screen) Screenshot(filename string, afterSave func()) {
 		img := image.NewNRGBA(image.Rect(0, 0, sizeX, sizeY))
 		for y := 0; y < sizeY; y++ {
 			for x := 0; x < sizeX; x++ {
-				c := data[x+y*sizeX:]
+				c := data[4*(x+(sizeY-1-y)*sizeX):]
 				img.Set(x, y, color.NRGBA{R: c[0], G: c[1], B: c[2], A: c[3]})
 			}
 		}
@@ -318,7 +318,7 @@ func (sc *Screen) Screenshot(filename string, afterSave func()) {
 	}
 }
 
-func (sc *Screen) Run(quit <-chan struct{}) {
+func (sc *Screen) Run(quit *chan struct{}) {
 	defer func() {
 		sc.window.Destroy()
 		// 3D window is close
@@ -399,7 +399,7 @@ func (sc *Screen) Run(quit <-chan struct{}) {
 		// quit
 		isQuit := false
 		select {
-		case _, ok := <-quit:
+		case _, ok := <-*quit:
 			if !ok {
 				isQuit = true
 			}
