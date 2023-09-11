@@ -275,7 +275,7 @@ func New(
 	return
 }
 
-func (sc *Screen) Screenshot(filename string, afterSave func(img image.Image)) {
+func (sc *Screen) Screenshot(afterSave func(img image.Image)) {
 	*sc.actions <- func() bool { return true }
 	*sc.actions <- func() bool {
 		// flush opengl
