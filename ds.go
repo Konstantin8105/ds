@@ -3,10 +3,8 @@ package ds
 import (
 	"fmt"
 	"image"
-	"image/png"
 	"image/color"
 	"math"
-	"os"
 	"runtime"
 
 	"github.com/go-gl/gl/v2.1/gl"
@@ -277,7 +275,7 @@ func New(
 	return
 }
 
-func (sc *Screen) Screenshot(filename string, afterSave func()) {
+func (sc *Screen) Screenshot(filename string, afterSave func(img image.Image)) {
 	*sc.actions <- func() bool { return true }
 	*sc.actions <- func() bool {
 		// flush opengl
@@ -298,20 +296,9 @@ func (sc *Screen) Screenshot(filename string, afterSave func()) {
 				img.Set(x, y, color.NRGBA{R: c[0], G: c[1], B: c[2], A: c[3]})
 			}
 		}
-		// run external function
-		f, err := os.Create(filename)
-		if err != nil {
-			return true
-		}
-		if err := png.Encode(f, img); err != nil {
-			return true
-		}
-		if err := f.Close(); err != nil {
-			return true
-		}
 		// run after save
 		if f := afterSave; f != nil {
-			f()
+			f(img)
 		}
 		// update screen
 		return true
