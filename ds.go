@@ -115,7 +115,7 @@ func New(
 		return
 	}
 
-	glfw.SwapInterval(1) // Enable vsync
+	// glfw.SwapInterval(1) // Enable vsync
 
 	sc.initRatio()
 
