@@ -41,16 +41,34 @@ func (o *Triangles) SetKeyCallback(
 	fmt.Fprintf(os.Stdout, "Key on window 0: %v\n", key)
 }
 func (o *Triangles) Draw(x, y, w, h int32) {
-	size := 500
+	size := 100
 	if len(o.points) == 0 {
-		// return from -1 to +1
-		get := func() float64 {
-			return (rand.Float64() * 2) - 1
-		}
-		o.points = make([][4][2]float64, size)
-		for i := 0; i < size; i++ {
-			for j := 0; j < 4; j++ {
-				o.points[i][j] = [2]float64{get(), get()}
+		if true {
+			// spiral triangles
+			base := [][2]float64{{-1, -1}, {1, -1}, {1, 1}, {-1, 1}, {-1, -1}}
+			o.points = make([][4][2]float64, size)
+			for range size {
+				o.points = append(o.points,
+					[4][2]float64{base[0], base[1], base[2], base[3]})
+				for j := range 4 {
+					for k := range 2 {
+						base[j][k] = base[j][k] + (base[j+1][k]-base[j][k])/
+							(0.2*float64(size))
+					}
+				}
+				base[4] = base[0]
+			}
+		} else {
+			// random
+			// return from -1 to +1
+			get := func() float64 {
+				return (rand.Float64() * 2) - 1
+			}
+			o.points = make([][4][2]float64, size)
+			for i := 0; i < size; i++ {
+				for j := 0; j < 4; j++ {
+					o.points[i][j] = [2]float64{get(), get()}
+				}
 			}
 		}
 	}
@@ -199,6 +217,7 @@ func main() {
 
 	quit := make(chan struct{})
 
+	d3.betta = 10
 	go func() {
 		var t float64
 		for {
@@ -208,7 +227,7 @@ func main() {
 				// d3.betta = 360 * float64(t) / 60
 				t += 0.05
 				d3.alpha = 360 * t
-				d3.betta = 360 * t
+				//d3.betta = 360 * t
 				return true
 			}
 			time.Sleep(time.Millisecond * 100)
@@ -227,7 +246,7 @@ func main() {
 	}()
 
 	go func() {
-		time.Sleep(5 * time.Second)
+		time.Sleep(50 * time.Second)
 		close(quit)
 	}()
 
