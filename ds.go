@@ -67,7 +67,6 @@ func (sc *Screen) ChangeRatio(newRatio float64) {
 		sc.initRatio()
 		return true
 	}
-	return
 }
 
 func (sc *Screen) initRatio() {
@@ -138,7 +137,8 @@ func New(
 	//     events.
 	sc.window.SetCharCallback(func(w *glfw.Window, r rune) {
 		//action
-		if f := sc.ds[sc.focusIndex].SetCharCallback; f != nil {
+		f := sc.ds[sc.focusIndex].SetCharCallback
+		{
 			*actions <- func() (fus bool) {
 				f(r)
 				return false
@@ -154,16 +154,16 @@ func New(
 		x, y := sc.window.GetCursorPos()
 		// split by windows
 		if int(x) < sc.xSplit {
-			if f := sc.ds[0].SetScrollCallback; f != nil {
-				*actions <- func() (fus bool) {
-					f(x, y, xoffset, yoffset)
-					sc.focusIndex = 0
-					return false
-				}
+			f := sc.ds[0].SetScrollCallback
+			*actions <- func() (fus bool) {
+				f(x, y, xoffset, yoffset)
+				sc.focusIndex = 0
+				return false
 			}
 			return
 		}
-		if f := sc.ds[1].SetScrollCallback; f != nil {
+		{
+			f := sc.ds[1].SetScrollCallback
 			*actions <- func() (fus bool) {
 				f(x-float64(sc.xSplit), y, xoffset, yoffset)
 				sc.focusIndex = 1
@@ -188,11 +188,10 @@ func New(
 	sc.window.SetKeyCallback(
 		func(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
 			//action
-			if f := sc.ds[sc.focusIndex].SetKeyCallback; f != nil {
-				*actions <- func() (fus bool) {
-					f(key, scancode, action, mods)
-					return false
-				}
+			f := sc.ds[sc.focusIndex].SetKeyCallback
+			*actions <- func() (fus bool) {
+				f(key, scancode, action, mods)
+				return false
 			}
 		})
 
@@ -218,7 +217,8 @@ func New(
 			if sc.focusIndex == 1 {
 				xpos = xpos - float64(sc.xSplit)
 			}
-			if f := sc.ds[sc.focusIndex].SetCursorPosCallback; f != nil {
+			{
+				f := sc.ds[sc.focusIndex].SetCursorPosCallback
 				*actions <- func() (fus bool) {
 					f(xpos, ypos)
 					return false
@@ -251,7 +251,8 @@ func New(
 				sc.focusIndex = 1
 				x = x - float64(sc.xSplit)
 			}
-			if f := sc.ds[sc.focusIndex].SetMouseButtonCallback; f != nil {
+			{
+				f := sc.ds[sc.focusIndex].SetMouseButtonCallback
 				*actions <- func() (fus bool) {
 					f(button, action, mods, x, y)
 					return false
@@ -263,7 +264,8 @@ func New(
 			if sc.focusIndex == 1 {
 				x = x - float64(sc.xSplit)
 			}
-			if f := sc.ds[sc.focusIndex].SetMouseButtonCallback; f != nil {
+			{
+				f := sc.ds[sc.focusIndex].SetMouseButtonCallback
 				*actions <- func() (fus bool) {
 					f(button, action, mods, x, y)
 					return false
@@ -324,7 +326,8 @@ func (sc *Screen) Run(quit *chan struct{}) {
 		gl.Viewport(0, 0, int32(sc.xSplit), int32(sc.h))
 		gl.MatrixMode(gl.PROJECTION)
 		gl.LoadIdentity()
-		if f := sc.ds[0].Draw; f != nil {
+		{
+			f := sc.ds[0].Draw
 			f(0, 0, int32(sc.xSplit), int32(sc.h))
 		}
 
@@ -335,7 +338,8 @@ func (sc *Screen) Run(quit *chan struct{}) {
 		gl.Viewport(int32(sc.xSplit), 0, int32(sc.w-sc.xSplit), int32(sc.h))
 		gl.MatrixMode(gl.PROJECTION)
 		gl.LoadIdentity()
-		if f := sc.ds[1].Draw; f != nil {
+		{
+			f := sc.ds[1].Draw
 			f(int32(sc.xSplit), 0, int32(sc.w-sc.xSplit), int32(sc.h))
 		}
 
@@ -399,7 +403,6 @@ func (sc *Screen) Run(quit *chan struct{}) {
 		// update ratio
 		sc.initRatio()
 	}
-	return
 }
 
 type Window interface {
