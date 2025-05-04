@@ -107,6 +107,13 @@ func New(
 	if err != nil {
 		return
 	}
+	// move function MakeContextCurrent from loop for avoid problem:
+	//
+	// X Error of failed request:  BadAccess (attempt to access private resource denied)
+	// Major opcode of failed request:  153 (GLX)
+	// Minor opcode of failed request:  5 (X_GLXMakeCurrent)
+	// Serial number of failed request:  197
+	// Current serial number in output stream:  197
 	sc.window.MakeContextCurrent()
 
 	if err = gl.Init(); err != nil {
@@ -313,9 +320,12 @@ func (sc *Screen) Run(quit *chan struct{}) {
 		// 3D window is close
 		glfw.Terminate()
 	}()
+
+	// gl.Enable(gl.DEBUG_OUTPUT)
+	// gl.Enable(gl.DEBUG_OUTPUT_SYNCHRONOUS)
+
 	for !sc.window.ShouldClose() {
 		// clean
-		glfw.PollEvents()
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 		gl.ClearColor(1, 1, 1, 1)
 
@@ -360,7 +370,7 @@ func (sc *Screen) Run(quit *chan struct{}) {
 		}
 
 		// end
-		sc.window.MakeContextCurrent()
+		glfw.PollEvents()
 		sc.window.SwapBuffers()
 
 		// actions

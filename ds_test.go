@@ -1,11 +1,10 @@
-//go:build ignore
-
-package main
+package ds_test
 
 import (
 	"fmt"
 	"math/rand"
 	"os"
+	"testing"
 	"time"
 
 	"github.com/Konstantin8105/ds"
@@ -47,11 +46,11 @@ func (o *Triangles) Draw(x, y, w, h int32) {
 			// spiral triangles
 			base := [][2]float64{{-1, -1}, {1, -1}, {1, 1}, {-1, 1}, {-1, -1}}
 			o.points = make([][4][2]float64, size)
-			for range size {
+			for i := 0; i < size; i++ {
 				o.points = append(o.points,
 					[4][2]float64{base[0], base[1], base[2], base[3]})
-				for j := range 4 {
-					for k := range 2 {
+				for j := 0; j < 4; j++ {
+					for k := 0; k < 2; k++ {
 						base[j][k] = base[j][k] + (base[j+1][k]-base[j][k])/
 							(0.2*float64(size))
 					}
@@ -121,8 +120,7 @@ func (o *D3) Draw(x, y, w, h int32) {
 	gl.MatrixMode(gl.PROJECTION)
 	gl.LoadIdentity()
 
-	var ratio float64
-	ratio = float64(w) / float64(h)
+	ratio := float64(w) / float64(h)
 	ymax := 0.2 * 8000
 	scale := 1.0
 	gl.Ortho(-scale*ratio, scale*ratio, -scale, scale, float64(-ymax), float64(ymax))
@@ -200,7 +198,7 @@ func (o *D3) Draw(x, y, w, h int32) {
 	gl.End()
 }
 
-func main() {
+func Test(t *testing.T) {
 	var ws [2]ds.Window
 	ch := make(chan func() (fus bool), 1000)
 
@@ -212,7 +210,7 @@ func main() {
 
 	screen, err := ds.New("Demo", ws, &ch)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	quit := make(chan struct{})
@@ -251,4 +249,7 @@ func main() {
 	}()
 
 	screen.Run(&quit)
+	if err := gl.GetError(); err != 0 {
+		t.Errorf("GL error: %v", err)
+	}
 }
