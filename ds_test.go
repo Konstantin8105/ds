@@ -40,7 +40,7 @@ func (o *Triangles) SetKeyCallback(
 	fmt.Fprintf(os.Stdout, "Key on window 0: %v\n", key)
 }
 func (o *Triangles) Draw(x, y, w, h int32) {
-	size := 100
+	size := 40
 	if len(o.points) == 0 {
 		if true {
 			// spiral triangles
@@ -226,9 +226,9 @@ func Test(t *testing.T) {
 				t += 0.05
 				d3.alpha = 360 * t
 				//d3.betta = 360 * t
-				return true
+				return false // true
 			}
-			time.Sleep(time.Millisecond * 100)
+			time.Sleep(time.Millisecond * 200)
 		}
 	}()
 
@@ -236,8 +236,8 @@ func Test(t *testing.T) {
 		for {
 			ch <- func() (fus bool) {
 				t := time.Now().Second()
-				screen.ChangeRatio(float64(t)/60*0.8 + 0.1)
-				return true
+				screen.ChangeRatio(float64(t)/60.0*0.8 + 0.1)
+				return false // true
 			}
 			time.Sleep(time.Millisecond * 500)
 		}

@@ -99,9 +99,14 @@ func New(
 		return
 	}
 
+	glfw.DefaultWindowHints()
+	glfw.WindowHint(glfw.Visible, glfw.True)
 	glfw.WindowHint(glfw.Resizable, glfw.True)
+	glfw.WindowHint(glfw.ContextCreationAPI, glfw.NativeContextAPI)
+	glfw.WindowHint(glfw.ClientAPI, glfw.OpenGLAPI)
 	glfw.WindowHint(glfw.ContextVersionMajor, 2)
 	glfw.WindowHint(glfw.ContextVersionMinor, 1)
+	glfw.WindowHint(glfw.Samples, 4) // smooth
 
 	sc.window, err = glfw.CreateWindow(800, 600, name, nil, nil)
 	if err != nil {
@@ -121,8 +126,7 @@ func New(
 		return
 	}
 
-	// glfw.SwapInterval(1) // Enable vsync
-
+	// glfw.SwapInterval(0)
 	sc.initRatio()
 
 	sc.focusIndex = 0 // default value
@@ -321,9 +325,6 @@ func (sc *Screen) Run(quit *chan struct{}) {
 		glfw.Terminate()
 	}()
 
-	// gl.Enable(gl.DEBUG_OUTPUT)
-	// gl.Enable(gl.DEBUG_OUTPUT_SYNCHRONOUS)
-
 	for !sc.window.ShouldClose() {
 		// clean
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
@@ -370,13 +371,15 @@ func (sc *Screen) Run(quit *chan struct{}) {
 		}
 
 		// end
-		glfw.PollEvents()
 		sc.window.SwapBuffers()
+		glfw.PollEvents()
 
 		// actions
 		// run first funcs
 		for i, size := 0, 50; i < size; i++ {
+			fmt.Printf("%d|", i)
 			forceUpdateScreen := false
+			isEmpty := false
 			select {
 			case f, ok := <-(*sc.actions):
 				if !ok {
@@ -390,6 +393,10 @@ func (sc *Screen) Run(quit *chan struct{}) {
 					break
 				}
 			default:
+				isEmpty = true
+				break
+			}
+			if isEmpty {
 				break
 			}
 			if forceUpdateScreen {
@@ -409,9 +416,6 @@ func (sc *Screen) Run(quit *chan struct{}) {
 		if isQuit {
 			break
 		}
-
-		// update ratio
-		sc.initRatio()
 	}
 }
 
