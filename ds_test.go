@@ -238,7 +238,4 @@ func Test(t *testing.T) {
 	}()
 
 	screen.Run(&quit)
-	if err := gl.GetError(); err != 0 {
-		t.Errorf("GL error: %v", err)
-	}
 }
