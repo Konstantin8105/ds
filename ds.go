@@ -11,8 +11,6 @@ import (
 	"github.com/go-gl/glfw/v3.3/glfw"
 )
 
-var windowRatio = 0.5
-
 func init() {
 	runtime.LockOSThread()
 }
@@ -23,34 +21,35 @@ type Screen struct {
 	ds           [2]Window
 	focusIndex   int
 	w, h, xSplit int
+	windowRatio  float64
 	actions      *chan Action
 	window       *glfw.Window
 }
 
-func (sc *Screen) UpdateWindow(pos int, w Window) {
-	if sc.actions == nil {
-		return
-	}
-	if w == nil {
-		return
-	}
-	if pos < 0 {
-		return
-	}
-	if 1 < pos {
-		return
-	}
-	*sc.actions <- func() (forceUpdateScreen bool) {
-		sc.ds[pos] = w
-		return true
-	}
-}
+// func (sc *Screen) UpdateWindow(pos int, w Window) {
+// 	if sc.actions == nil {
+// 		return
+// 	}
+// 	if w == nil {
+// 		return
+// 	}
+// 	if pos < 0 {
+// 		return
+// 	}
+// 	if 1 < pos {
+// 		return
+// 	}
+// 	*sc.actions <- func() (forceUpdateScreen bool) {
+// 		sc.ds[pos] = w
+// 		return true
+// 	}
+// }
 
 func (sc *Screen) ChangeRatio(newRatio float64) {
 	if newRatio < 0 {
 		return
 	}
-	if math.Abs(newRatio-windowRatio) < 1e-6 {
+	if math.Abs(newRatio-sc.windowRatio) < 1e-6 {
 		return
 	}
 	if 1 < newRatio {
@@ -63,15 +62,11 @@ func (sc *Screen) ChangeRatio(newRatio float64) {
 		newRatio = 0.9
 	}
 	(*sc.actions) <- func() (forceUpdateScreen bool) {
-		windowRatio = newRatio
-		sc.initRatio()
+		sc.windowRatio = newRatio
+		sc.w, sc.h = sc.window.GetSize()
+		sc.xSplit = int(float64(sc.w) * sc.windowRatio)
 		return true
 	}
-}
-
-func (sc *Screen) initRatio() {
-	sc.w, sc.h = sc.window.GetSize()
-	sc.xSplit = int(float64(sc.w) * windowRatio)
 }
 
 // New return windows.
@@ -127,7 +122,8 @@ func New(
 		return
 	}
 
-	sc.initRatio()
+	sc.windowRatio = 0.5
+	defer sc.ChangeRatio(sc.windowRatio)
 
 	sc.focusIndex = 0 // default value
 
@@ -325,11 +321,16 @@ func (sc *Screen) Run(quit *chan struct{}) {
 		glfw.Terminate()
 	}()
 
+	// gl.Disable(gl.DEPTH_TEST)
+	// gl.Disable(gl.LIGHTING)
+
 	for !sc.window.ShouldClose() {
 		glfw.PollEvents()
 		// clean
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 		gl.ClearColor(1, 1, 1, 1)
+		// gl.ClearDepth(1)
+		// gl.DepthFunc(gl.LEQUAL)
 
 		// prepare screen 0
 		gl.Viewport(0, 0, int32(sc.xSplit), int32(sc.h))
@@ -407,6 +408,8 @@ func (sc *Screen) Run(quit *chan struct{}) {
 		}
 
 		// end
+		// gl.Finish()
+		// gl.Flush()
 		sc.window.SwapBuffers()
 	}
 }
