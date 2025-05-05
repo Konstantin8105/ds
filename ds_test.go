@@ -2,7 +2,6 @@ package ds_test
 
 import (
 	"fmt"
-	"math/rand"
 	"os"
 	"testing"
 	"time"
@@ -13,8 +12,8 @@ import (
 )
 
 type Triangles struct {
-	points [][4][2]float64
-	color  float64
+	// points [][4][2]float64
+	color float64
 }
 
 func (o *Triangles) SetMouseButtonCallback(
@@ -39,39 +38,29 @@ func (o *Triangles) SetKeyCallback(
 ) {
 	fmt.Fprintf(os.Stdout, "Key on window 0: %v\n", key)
 }
+
+const size = 40
+
+var points [size][4][2]float64
+var ip bool // initialized points
+
 func (o *Triangles) Draw(x, y, w, h int32) {
-	size := 40
-	if len(o.points) == 0 {
-		if true {
-			// spiral triangles
-			base := [][2]float64{{-1, -1}, {1, -1}, {1, 1}, {-1, 1}, {-1, -1}}
-			o.points = make([][4][2]float64, size)
-			for i := 0; i < size; i++ {
-				o.points = append(o.points,
-					[4][2]float64{base[0], base[1], base[2], base[3]})
-				for j := 0; j < 4; j++ {
-					for k := 0; k < 2; k++ {
-						base[j][k] = base[j][k] + (base[j+1][k]-base[j][k])/
-							(0.2*float64(size))
-					}
-				}
-				base[4] = base[0]
-			}
-		} else {
-			// random
-			// return from -1 to +1
-			get := func() float64 {
-				return (rand.Float64() * 2) - 1
-			}
-			o.points = make([][4][2]float64, size)
-			for i := 0; i < size; i++ {
-				for j := 0; j < 4; j++ {
-					o.points[i][j] = [2]float64{get(), get()}
+	// spiral triangles
+	if !ip {
+		ip = true
+		base := [][2]float64{{-1, -1}, {1, -1}, {1, 1}, {-1, 1}, {-1, -1}}
+		for i := 0; i < size; i++ {
+			points[i] = [4][2]float64{base[0], base[1], base[2], base[3]}
+			for j := 0; j < 4; j++ {
+				for k := 0; k < 2; k++ {
+					base[j][k] = base[j][k] + (base[j+1][k]-base[j][k])/
+						(0.2*float64(size))
 				}
 			}
+			base[4] = base[0]
 		}
 	}
-	for i, ps := range o.points {
+	for i, ps := range points {
 		gl.Begin(gl.QUADS)
 		p := float64(i) / float64(size)
 		if i%2 == 0 {

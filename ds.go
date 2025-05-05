@@ -120,13 +120,13 @@ func New(
 	// Serial number of failed request:  197
 	// Current serial number in output stream:  197
 	sc.window.MakeContextCurrent()
+	glfw.SwapInterval(1)
 
 	if err = gl.Init(); err != nil {
 		glfw.Terminate()
 		return
 	}
 
-	// glfw.SwapInterval(0)
 	sc.initRatio()
 
 	sc.focusIndex = 0 // default value
@@ -326,6 +326,7 @@ func (sc *Screen) Run(quit *chan struct{}) {
 	}()
 
 	for !sc.window.ShouldClose() {
+		glfw.PollEvents()
 		// clean
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 		gl.ClearColor(1, 1, 1, 1)
@@ -370,36 +371,24 @@ func (sc *Screen) Run(quit *chan struct{}) {
 			gl.End()
 		}
 
-		// end
-		sc.window.SwapBuffers()
-		glfw.PollEvents()
-
 		// actions
 		// run first funcs
 		for i, size := 0, 50; i < size; i++ {
-			fmt.Printf("%d|", i)
-			forceUpdateScreen := false
-			isEmpty := false
+			var reset bool
 			select {
 			case f, ok := <-(*sc.actions):
 				if !ok {
 					// probably closed channel
 					break
 				}
-				// TODO: if action time long for example 10 minutes,
+				// if action time long for example 10 minutes,
 				// then screen is freeze.
-				forceUpdateScreen = f()
-				if forceUpdateScreen {
-					break
-				}
+				reset = f() // forceUpdateScreen
 			default:
-				isEmpty = true
+				reset = true
 				break
 			}
-			if isEmpty {
-				break
-			}
-			if forceUpdateScreen {
+			if reset {
 				break
 			}
 		}
@@ -416,6 +405,9 @@ func (sc *Screen) Run(quit *chan struct{}) {
 		if isQuit {
 			break
 		}
+
+		// end
+		sc.window.SwapBuffers()
 	}
 }
 
