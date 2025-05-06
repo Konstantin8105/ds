@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/color"
 	"math"
+	"os"
 	"runtime"
 
 	"github.com/go-gl/gl/v2.1/gl"
@@ -65,6 +66,7 @@ func (sc *Screen) ChangeRatio(newRatio float64) {
 		sc.windowRatio = newRatio
 		sc.w, sc.h = sc.window.GetSize()
 		sc.xSplit = int(float64(sc.w) * sc.windowRatio)
+		fmt.Fprintf(os.Stdout, "Change ratio: %d\n", sc.xSplit)
 		return true
 	}
 }
@@ -373,7 +375,7 @@ func (sc *Screen) Run(quit *chan struct{}) {
 
 		// actions
 		// run first funcs
-		for i, size := 0, 50; i < size; i++ {
+		for i, size := 0, 5000; i < size; i++ {
 			var reset bool
 			select {
 			case f, ok := <-(*sc.actions):

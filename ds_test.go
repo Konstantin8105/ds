@@ -1,6 +1,8 @@
 package ds_test
 
 import (
+	"fmt"
+	"image"
 	"testing"
 	"time"
 
@@ -26,7 +28,7 @@ func Test(t *testing.T) {
 	go func() {
 		screen.Run(&quit)
 	}()
-	/*for it, tc := range []func(){
+	for it, tc := range []func(){
 		func() {
 			screen.ChangeRatio(0.5)
 			d3.Alpha = 10.0
@@ -50,30 +52,32 @@ func Test(t *testing.T) {
 				//compare.TestPng(t, fmt.Sprintf("test.%02d.png", it), img)
 			})
 		})
-	}*/
-	d3.Alpha = 10.0
-	d3.Betta = 10.0
-	go func() {
-		var t float64
-		for {
-			ch <- func() (fus bool) {
-				t += 0.05
-				d3.Alpha = 360 * t
-				return false
+	}
+	t.Run("Example", func(t *testing.T) {
+		d3.Alpha = 10.0
+		d3.Betta = 10.0
+		go func() {
+			var t float64
+			for {
+				ch <- func() (fus bool) {
+					t += 0.05
+					d3.Alpha = 360 * t
+					return false
+				}
+				time.Sleep(time.Millisecond * 200)
 			}
-			time.Sleep(time.Millisecond * 200)
-		}
-	}()
-	go func() {
-		for {
-			ch <- func() (fus bool) {
-				t := time.Now().Second()
-				screen.ChangeRatio(float64(t)/60.0*0.8 + 0.1)
-				return false
+		}()
+		go func() {
+			for {
+				ch <- func() (fus bool) {
+					t := time.Now().Second()
+					screen.ChangeRatio(float64(t)/60.0*0.8 + 0.1)
+					return false
+				}
+				time.Sleep(time.Millisecond * 500)
 			}
-			time.Sleep(time.Millisecond * 500)
-		}
-	}()
-	time.Sleep(50 * time.Second)
+		}()
+		time.Sleep(50 * time.Second)
+	})
 	close(quit)
 }
