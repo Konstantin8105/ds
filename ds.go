@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/color"
 	"math"
+	"os"
 	"runtime"
 
 	"github.com/go-gl/gl/v2.1/gl"
@@ -297,6 +298,18 @@ func (sc *Screen) Screenshot(afterSave func(img image.Image)) {
 			data := make([]uint8, 4*size)
 			gl.ReadPixels(0, 0, int32(sizeX), int32(sizeY),
 				gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(&data[0]))
+			// debug information
+			{
+				empty := true
+				for _, d := range data {
+					if d != 0 {
+						empty = false
+					}
+				}
+				if empty {
+					fmt.Fprintf(os.Stdout, "Screenshoot is empty\n")
+				}
+			}
 			// create picture
 			for y := 0; y < sizeY; y++ {
 				for x := 0; x < sizeX; x++ {
@@ -370,7 +383,7 @@ func (sc *Screen) Run(quit *chan struct{}) {
 
 		// actions
 		// run first funcs
-		for i, size := 0, 5000; i < size; i++ {
+		for i, size := 0, 50; i < size; i++ {
 			var reset bool
 			select {
 			case f, ok := <-(*sc.actions):
