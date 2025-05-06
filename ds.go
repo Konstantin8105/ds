@@ -123,7 +123,7 @@ func New(
 	}
 
 	sc.windowRatio = 0.5
-	defer sc.ChangeRatio(sc.windowRatio)
+	sc.ChangeRatio(sc.windowRatio)
 
 	sc.focusIndex = 0 // default value
 
@@ -294,15 +294,17 @@ func (sc *Screen) Screenshot(afterSave func(img image.Image)) {
 		sizeX := sc.w
 		sizeY := sc.h
 		size := sizeX * sizeY
-		data := make([]uint8, 4*size)
-		gl.ReadPixels(0, 0, int32(sizeX), int32(sizeY),
-			gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(&data[0]))
-		// create picture
 		img := image.NewNRGBA(image.Rect(0, 0, sizeX, sizeY))
-		for y := 0; y < sizeY; y++ {
-			for x := 0; x < sizeX; x++ {
-				c := data[4*(x+(sizeY-1-y)*sizeX):]
-				img.Set(x, y, color.NRGBA{R: c[0], G: c[1], B: c[2], A: c[3]})
+		if 0 < size {
+			data := make([]uint8, 4*size)
+			gl.ReadPixels(0, 0, int32(sizeX), int32(sizeY),
+				gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(&data[0]))
+			// create picture
+			for y := 0; y < sizeY; y++ {
+				for x := 0; x < sizeX; x++ {
+					c := data[4*(x+(sizeY-1-y)*sizeX):]
+					img.Set(x, y, color.NRGBA{R: c[0], G: c[1], B: c[2], A: c[3]})
+				}
 			}
 		}
 		// run after save
@@ -408,8 +410,8 @@ func (sc *Screen) Run(quit *chan struct{}) {
 		}
 
 		// end
-		// gl.Finish()
-		// gl.Flush()
+		gl.Finish()
+		gl.Flush()
 		sc.window.SwapBuffers()
 	}
 }
