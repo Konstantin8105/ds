@@ -5,7 +5,6 @@ import (
 	"image"
 	"image/color"
 	"math"
-	"os"
 	"runtime"
 
 	"github.com/go-gl/gl/v2.1/gl"
@@ -66,7 +65,6 @@ func (sc *Screen) ChangeRatio(newRatio float64) {
 		sc.windowRatio = newRatio
 		sc.w, sc.h = sc.window.GetSize()
 		sc.xSplit = int(float64(sc.w) * sc.windowRatio)
-		fmt.Fprintf(os.Stdout, "Change ratio: %d\n", sc.xSplit)
 		return true
 	}
 }
@@ -124,8 +122,9 @@ func New(
 		return
 	}
 
-	sc.windowRatio = 0.5
-	sc.ChangeRatio(sc.windowRatio)
+	defer func() {
+		sc.ChangeRatio(0.5)
+	}()
 
 	sc.focusIndex = 0 // default value
 
@@ -298,6 +297,7 @@ func (sc *Screen) Screenshot(afterSave func(img image.Image)) {
 		size := sizeX * sizeY
 		img := image.NewNRGBA(image.Rect(0, 0, sizeX, sizeY))
 		if 0 < size {
+			gl.Finish()
 			data := make([]uint8, 4*size)
 			gl.ReadPixels(0, 0, int32(sizeX), int32(sizeY),
 				gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(&data[0]))
@@ -324,10 +324,6 @@ func (sc *Screen) Run(quit *chan struct{}) {
 		// 3D window is close
 		glfw.Terminate()
 	}()
-
-	// gl.Disable(gl.DEPTH_TEST)
-	// gl.Disable(gl.LIGHTING)
-
 	for !sc.window.ShouldClose() {
 		glfw.PollEvents()
 		// clean

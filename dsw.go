@@ -40,10 +40,11 @@ func (o *DemoSpiral) Draw(x, y, w, h int32) {
 	}
 	for i, ps := range o.points {
 		green := float64(i) / float64(size)
+		blue := green
 		if i%2 == 0 {
 			green = float64(size-i) / float64(size)
+			blue = float64(i%2) * 0.5
 		}
-		blue := green
 		gl.Color4d(0.8, green, blue, 0.5)
 		gl.Begin(gl.QUADS)
 		for _, p := range ps {
