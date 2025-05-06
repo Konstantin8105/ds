@@ -1,8 +1,9 @@
 package ds_test
 
 import (
-	"fmt"
 	"image"
+
+	"fmt"
 	"testing"
 	"time"
 
@@ -13,7 +14,7 @@ func Test(t *testing.T) {
 	var (
 		ws [2]ds.Window
 		ch = make(chan func() (fus bool), 1000)
-		tr = ds.NewDemoSpiral(1)
+		tr = ds.DemoSpiral{}
 		d3 = ds.DemoCube{}
 	)
 	// create screen

@@ -11,13 +11,6 @@ import (
 type DemoSpiral struct {
 	points [40][4][2]float64
 	init   bool
-	color  float64
-}
-
-func NewDemoSpiral(color float64) DemoSpiral {
-	return DemoSpiral{
-		color: color,
-	}
 }
 
 func (o *DemoSpiral) SetMouseButtonCallback(button glfw.MouseButton, action glfw.Action, mods glfw.ModifierKey, x, y float64) {
@@ -46,12 +39,13 @@ func (o *DemoSpiral) Draw(x, y, w, h int32) {
 		}
 	}
 	for i, ps := range o.points {
-		gl.Begin(gl.QUADS)
-		p := float64(i) / float64(size)
+		green := float64(i) / float64(size)
 		if i%2 == 0 {
-			p = float64(size-i) / float64(size)
+			green = float64(size-i) / float64(size)
 		}
-		gl.Color4d(0.8, p, o.color, 0.5)
+		blue := green
+		gl.Color4d(0.8, green, blue, 0.5)
+		gl.Begin(gl.QUADS)
 		for _, p := range ps {
 			gl.Vertex2d(p[0], p[1])
 		}
