@@ -288,16 +288,12 @@ func New(
 func (sc *Screen) Screenshot(afterSave func(img image.Image)) {
 	*sc.actions <- func() bool { return true }
 	*sc.actions <- func() bool {
-		// flush opengl
-		gl.Flush()
-		gl.Finish()
 		// get pixels from opengl
 		sizeX := sc.w
 		sizeY := sc.h
 		size := sizeX * sizeY
 		img := image.NewNRGBA(image.Rect(0, 0, sizeX, sizeY))
 		if 0 < size {
-			gl.Finish()
 			data := make([]uint8, 4*size)
 			gl.ReadPixels(0, 0, int32(sizeX), int32(sizeY),
 				gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(&data[0]))
@@ -369,6 +365,9 @@ func (sc *Screen) Run(quit *chan struct{}) {
 			gl.End()
 		}
 
+		// end
+		sc.window.SwapBuffers()
+
 		// actions
 		// run first funcs
 		for i, size := 0, 5000; i < size; i++ {
@@ -403,11 +402,6 @@ func (sc *Screen) Run(quit *chan struct{}) {
 		if isQuit {
 			break
 		}
-
-		// end
-		// gl.Finish()
-		// gl.Flush()
-		sc.window.SwapBuffers()
 	}
 }
 

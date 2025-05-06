@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"image"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/Konstantin8105/compare"
@@ -40,6 +41,7 @@ func main() {
 		panic(err)
 	}
 	go func() {
+		time.Sleep(time.Second)
 		for it, tc := range []func(){
 			func() {
 				screen.ChangeRatio(0.5)
@@ -57,9 +59,13 @@ func main() {
 				d3.Betta = 30.0
 			},
 		} {
+			time.Sleep(500 * time.Millisecond)
 			fmt.Fprintf(os.Stdout, "Test: %01d\n", it)
 			tc()
+			var wg sync.WaitGroup
+			wg.Add(1)
 			screen.Screenshot(func(img image.Image) {
+				defer wg.Done()
 				var t checker
 				compare.TestPng(&t, fmt.Sprintf("test.%02d.png", it), img)
 				if t.iserror {
@@ -67,6 +73,7 @@ func main() {
 				}
 				fmt.Println(t)
 			})
+			wg.Wait()
 		}
 		fmt.Fprintf(os.Stdout, "Test: free move\n")
 		d3.Alpha = 10.0
