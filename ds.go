@@ -333,7 +333,6 @@ func (sc *Screen) Run(quit *chan struct{}) {
 		gl.ClearColor(1, 1, 1, 1)
 		// gl.ClearDepth(1)
 		// gl.DepthFunc(gl.LEQUAL)
-
 		// prepare screen 0
 		gl.Viewport(0, 0, int32(sc.xSplit), int32(sc.h))
 		gl.MatrixMode(gl.MODELVIEW)
@@ -345,7 +344,6 @@ func (sc *Screen) Run(quit *chan struct{}) {
 			f := sc.ds[0].Draw
 			f(0, 0, int32(sc.xSplit), int32(sc.h))
 		}
-
 		// prepare screen 1
 		gl.Viewport(int32(sc.xSplit), 0, int32(sc.w-sc.xSplit), int32(sc.h))
 		gl.MatrixMode(gl.MODELVIEW)
@@ -357,7 +355,6 @@ func (sc *Screen) Run(quit *chan struct{}) {
 			f := sc.ds[1].Draw
 			f(int32(sc.xSplit), 0, int32(sc.w-sc.xSplit), int32(sc.h))
 		}
-
 		// separator
 		gl.Viewport(int32(sc.xSplit), 0, int32(1), int32(sc.h))
 		gl.MatrixMode(gl.MODELVIEW)
@@ -410,8 +407,8 @@ func (sc *Screen) Run(quit *chan struct{}) {
 		}
 
 		// end
-		gl.Finish()
-		gl.Flush()
+		// gl.Finish()
+		// gl.Flush()
 		sc.window.SwapBuffers()
 	}
 }

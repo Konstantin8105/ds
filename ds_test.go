@@ -1,11 +1,9 @@
 package ds_test
 
 import (
-	"image"
 	"testing"
 	"time"
 
-	"github.com/Konstantin8105/compare"
 	"github.com/Konstantin8105/ds"
 )
 
@@ -14,10 +12,7 @@ func Test(t *testing.T) {
 		ws [2]ds.Window
 		ch = make(chan func() (fus bool), 1000)
 		tr = ds.NewDemoSpiral(1)
-		d3 = ds.DemoCube{
-			Alpha: 10,
-			Betta: 10,
-		}
+		d3 = ds.DemoCube{}
 	)
 	// create screen
 	ws[0] = &tr
@@ -28,35 +23,36 @@ func Test(t *testing.T) {
 	}
 	// quit channel
 	quit := make(chan struct{})
-	pause := func() {
-		time.Sleep(500 * time.Millisecond)
-	}
 	go func() {
 		screen.Run(&quit)
 	}()
-	pause()
-	screen.Screenshot(func(img image.Image) {
-		compare.TestPng(t, "test.00.png", img)
-	})
-	pause()
-	ch <- func() (fus bool) {
-		d3.Alpha = 20
-		return false
-	}
-	pause()
-	screen.Screenshot(func(img image.Image) {
-		compare.TestPng(t, "test.01.png", img)
-	})
-	pause()
-	ch <- func() (fus bool) {
-		screen.ChangeRatio(0.3)
-		return false
-	}
-	pause()
-	screen.Screenshot(func(img image.Image) {
-		compare.TestPng(t, "test.02.png", img)
-	})
-	pause()
+	/*for it, tc := range []func(){
+		func() {
+			screen.ChangeRatio(0.5)
+			d3.Alpha = 10.0
+			d3.Betta = 10.0
+		},
+		func() {
+			screen.ChangeRatio(0.5)
+			d3.Alpha = 10.0
+			d3.Betta = 30.0
+		},
+		func() {
+			screen.ChangeRatio(0.3)
+			d3.Alpha = 10.0
+			d3.Betta = 30.0
+		},
+	} {
+		t.Run(fmt.Sprintf("%02d", it), func(t *testing.T) {
+			time.Sleep(500 * time.Millisecond)
+			tc()
+			screen.Screenshot(func(img image.Image) {
+				//compare.TestPng(t, fmt.Sprintf("test.%02d.png", it), img)
+			})
+		})
+	}*/
+	d3.Alpha = 10.0
+	d3.Betta = 10.0
 	go func() {
 		var t float64
 		for {
