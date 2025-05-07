@@ -296,6 +296,11 @@ func (sc *Screen) Screenshot(afterSave func(img image.Image)) {
 		img := image.NewNRGBA(image.Rect(0, 0, sizeX, sizeY))
 		if 0 < size {
 			data := make([]uint8, 4*size)
+			for i := range data {
+				// if after ReadPixels all data steal 88, then
+				// RaeadPixels is don`t work
+				data[i] = 88
+			}
 			gl.ReadPixels(0, 0, int32(sizeX), int32(sizeY),
 				gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(&data[0]))
 			// debug information
