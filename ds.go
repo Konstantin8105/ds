@@ -98,11 +98,11 @@ func New(
 	glfw.DefaultWindowHints()
 	glfw.WindowHint(glfw.Visible, glfw.True)
 	glfw.WindowHint(glfw.Resizable, glfw.True)
-	glfw.WindowHint(glfw.ContextCreationAPI, glfw.NativeContextAPI)
-	glfw.WindowHint(glfw.ClientAPI, glfw.OpenGLAPI)
+	// glfw.WindowHint(glfw.ContextCreationAPI, glfw.NativeContextAPI)
+	// glfw.WindowHint(glfw.ClientAPI, glfw.OpenGLAPI)
 	glfw.WindowHint(glfw.ContextVersionMajor, 2)
 	glfw.WindowHint(glfw.ContextVersionMinor, 1)
-	glfw.WindowHint(glfw.Samples, 4) // smooth
+	// glfw.WindowHint(glfw.Samples, 4) // smooth
 
 	sc.window, err = glfw.CreateWindow(800, 600, name, nil, nil)
 	if err != nil {
@@ -295,6 +295,8 @@ func (sc *Screen) Screenshot(afterSave func(img image.Image)) {
 		size := sizeX * sizeY
 		img := image.NewNRGBA(image.Rect(0, 0, sizeX, sizeY))
 		if 0 < size {
+			gl.Finish()
+			gl.Flush()
 			data := make([]uint8, 4*size)
 			for i := range data {
 				// if after ReadPixels all data steal 88, then
