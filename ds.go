@@ -46,24 +46,17 @@ type Screen struct {
 // 	}
 // }
 
-func (sc *Screen) ChangeRatio(newRatio float64) {
-	if newRatio < 0 {
+func (sc *Screen) ChangeRatio(ratio float64) {
+	ratio = math.Min(math.Max(ratio, 0.1), 0.9)
+	// Acceptable same ratio, for example:
+	// * after update window sizes
+	// * update screen
+	w, h := sc.window.GetSize()
+	if sc.w == w && sc.h == h && math.Abs(ratio-sc.windowRatio) < 1e-6 {
 		return
-	}
-	if math.Abs(newRatio-sc.windowRatio) < 1e-6 {
-		return
-	}
-	if 1 < newRatio {
-		return
-	}
-	if newRatio < 0.1 {
-		newRatio = 0.1
-	}
-	if 0.9 < newRatio {
-		newRatio = 0.9
 	}
 	(*sc.actions) <- func() (forceUpdateScreen bool) {
-		sc.windowRatio = newRatio
+		sc.windowRatio = ratio
 		sc.w, sc.h = sc.window.GetSize()
 		sc.xSplit = int(float64(sc.w) * sc.windowRatio)
 		return true
@@ -336,6 +329,9 @@ func (sc *Screen) Run(quit *chan struct{}) {
 		glfw.Terminate()
 	}()
 	for !sc.window.ShouldClose() {
+		// update ratio after window size change
+		sc.ChangeRatio(sc.windowRatio)
+		// events
 		glfw.PollEvents()
 		// clean
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
